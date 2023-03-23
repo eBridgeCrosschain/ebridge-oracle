@@ -11,6 +11,7 @@
         <PackageReference Include="AElf.Types" Version="1.2.0" />
         <PackageReference Include="AElf.Core" Version="1.2.0" />
         <PackageReference Include="AElf.CSharp.Core" Version="1.2.0" />
+        <PackageReference Include="GraphQL.Client" Version="5.1.1" />
         <PackageReference Include="Nethereum.KeyStore" Version="4.7.0" />
     </ItemGroup>
 
@@ -69,8 +70,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\contract\AElf.Contracts.IntegerAggregator\AElf.Contracts.IntegerAggregator.csproj" />
-      <ProjectReference Include="..\..\contract\AElf.Contracts.OracleUser\AElf.Contracts.OracleUser.csproj" />
       <ProjectReference Include="..\..\modules\AElf.Client.Bridge\AElf.Client.Bridge.csproj" />
       <ProjectReference Include="..\..\modules\AElf.Client.MerkleTree\AElf.Client.MerkleTree.csproj" />
       <ProjectReference Include="..\..\modules\AElf.Client.Oracle\AElf.Client.Oracle.csproj" />

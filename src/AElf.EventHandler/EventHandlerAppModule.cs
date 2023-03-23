@@ -18,6 +18,7 @@ using RabbitMQ.Client;
 using Volo.Abp;
 using Volo.Abp.Autofac;
 using Volo.Abp.BackgroundWorkers;
+using Volo.Abp.Caching;
 using Volo.Abp.Caching.StackExchangeRedis;
 using Volo.Abp.EventBus.RabbitMq;
 using Volo.Abp.Modularity;
@@ -43,6 +44,8 @@ public class EventHandlerAppModule : AbpModule
     public override void ConfigureServices(ServiceConfigurationContext context)
     {
         var configuration = context.Services.GetConfiguration();
+        
+        Configure<AbpDistributedCacheOptions>(options => { options.KeyPrefix = "OracleClient:"; });
 
         // Just for logging.
         Configure<MessageQueueOptions>(options => { configuration.GetSection("MessageQueue").Bind(options); });

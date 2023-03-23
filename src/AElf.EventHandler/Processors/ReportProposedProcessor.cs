@@ -4,6 +4,7 @@ using AElf.Client.Core.Extensions;
 using AElf.Client.Core.Options;
 using AElf.Client.Report;
 using AElf.Contracts.Report;
+using AElf.EventHandler.IndexerSync;
 using AElf.Types;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -11,51 +12,49 @@ using Volo.Abp.DependencyInjection;
 
 namespace AElf.EventHandler;
 
-internal class ReportProposedLogEventProcessor : LogEventProcessorBase<ReportProposed>
+public interface IReportProposedProcessor
+{
+    Task ProcessAsync(string aelfChainId, ReportInfoDto reportQueryInfo);
+}
+
+public class ReportProposedProcessor : IReportProposedProcessor,ITransientDependency
 {
     private readonly IReportProvider _reportProvider;
     private readonly IReportService _reportService;
     private readonly IAElfAccountProvider _accountProvider;
     private readonly AElfClientConfigOptions _aelfClientConfigOptions;
+    private readonly IChainIdProvider _chainIdProvider;
 
-    public override string ContractName => "ReportContract";
-    private readonly ILogger<ReportProposedLogEventProcessor> _logger;
+    private readonly ILogger<ReportProposedProcessor> _logger;
 
-    public ReportProposedLogEventProcessor(
+    public ReportProposedProcessor(
         IReportProvider reportProvider,
         IReportService reportService,
         IAElfAccountProvider accountProvider,
-        ILogger<ReportProposedLogEventProcessor> logger,
-        IOptionsSnapshot<AElfContractOptions> contractAddressOptions,
-        IOptionsSnapshot<AElfClientConfigOptions> aelfConfigOptions, IChainIdProvider chainIdProvider) : base(
-        contractAddressOptions)
+        ILogger<ReportProposedProcessor> logger,
+        IOptionsSnapshot<AElfClientConfigOptions> aelfConfigOptions, IChainIdProvider chainIdProvider)
     {
         _logger = logger;
+        _chainIdProvider = chainIdProvider;
         _reportProvider = reportProvider;
         _reportService = reportService;
         _accountProvider = accountProvider;
         _aelfClientConfigOptions = aelfConfigOptions.Value;
     }
 
-    public override async Task ProcessAsync(LogEvent logEvent, EventContext context)
+    public async Task ProcessAsync(string aelfChainId, ReportInfoDto reportQueryInfo)
     {
-        var reportProposed = new ReportProposed();
-        reportProposed.MergeFrom(logEvent);
-
-        _logger.LogInformation($"New report: {reportProposed}");
-        
         //TODO:Check permission
-
-        var chainId = ChainIdProvider.GetChainId(context.ChainId);
+        var chainId = _chainIdProvider.GetChainId(aelfChainId);
         var privateKey = _accountProvider.GetPrivateKey(_aelfClientConfigOptions.AccountAlias);
         
         var sendTxResult = await _reportService.ConfirmReportAsync(chainId,new ConfirmReportInput
         {
-            ChainId = reportProposed.TargetChainId,
-            Token = reportProposed.Token,
-            RoundId = reportProposed.RoundId,
+            ChainId = reportQueryInfo.TargetChainId,
+            Token = reportQueryInfo.Token,
+            RoundId = reportQueryInfo.RoundId,
             Signature = SignHelper
-                .GetSignature(reportProposed.RawReport, privateKey).RecoverInfo
+                .GetSignature(reportQueryInfo.RawReport, privateKey).RecoverInfo
         });
         _logger.LogInformation($"[ConfirmReport] Transaction id ： {sendTxResult.TransactionResult.TransactionId}");
     }

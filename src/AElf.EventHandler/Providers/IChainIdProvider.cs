@@ -5,7 +5,7 @@ namespace AElf.EventHandler;
 
 public interface IChainIdProvider
 {
-    string GetChainId(int chainId);
+    string GetChainId(string aelfChainId);
 }
 
 public class ChainIdProvider : IChainIdProvider, ITransientDependency
@@ -17,8 +17,8 @@ public class ChainIdProvider : IChainIdProvider, ITransientDependency
         _chainIdMappingOptions = chainIdMappingOptions.Value;
     }
 
-    public string GetChainId(int chainId)
+    public string GetChainId(string aelfChainId)
     {
-        return _chainIdMappingOptions.Mapping[chainId.ToString()];
+        return _chainIdMappingOptions.Mapping[aelfChainId];
     }
 }
