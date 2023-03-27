@@ -11,6 +11,9 @@ using AElf.Client.Report;
 using AElf.EventHandler.Workers;
 using AElf.Nethereum.Bridge;
 using AElf.Nethereum.Core;
+using GraphQL.Client.Abstractions;
+using GraphQL.Client.Http;
+using GraphQL.Client.Serializer.Newtonsoft;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
@@ -85,14 +88,16 @@ public class EventHandlerAppModule : AbpModule
         Configure<FaultHandlingOptions>(configuration.GetSection("FaultHandling"));
         
         context.Services.AddHostedService<EventHandlerAppHostedService>();
-        context.Services.AddTransient(typeof(ILogEventProcessor<>), typeof(LogEventProcessorBase<>));
         context.Services.AddSingleton<ITransmitTransactionProvider, TransmitTransactionProvider>();
         context.Services.AddSingleton<ISignatureRecoverableInfoProvider, SignatureRecoverableInfoProvider>();
+
+        ConfigureGraphQl(context, configuration);
     }
     public override void OnApplicationInitialization(ApplicationInitializationContext context)
     {
         context.AddBackgroundWorkerAsync<TransmitTransactionWorker>();
         context.AddBackgroundWorkerAsync<ReceiptSyncWorker>();
+        context.AddBackgroundWorkerAsync<IndexerSyncWorker>();
 
         var faultHandlingOptions = context.ServiceProvider.GetRequiredService<IOptionsSnapshot<FaultHandlingOptions>>();
         if (faultHandlingOptions.Value.IsReSendFailedJob)
@@ -100,5 +105,13 @@ public class EventHandlerAppModule : AbpModule
             var service = context.ServiceProvider.GetRequiredService<ITransmitTransactionProvider>();
             AsyncHelper.RunSync(async()=> await service.ReSendFailedJobAsync(faultHandlingOptions.Value.ReSendFailedJobChainId));
         }
+    }
+    
+    private void ConfigureGraphQl(ServiceConfigurationContext context,
+        IConfiguration configuration)
+    {
+        context.Services.AddSingleton(new GraphQLHttpClient(configuration["GraphQL:Configuration"],
+            new NewtonsoftJsonSerializer()));
+        context.Services.AddScoped<IGraphQLClient>(sp => sp.GetRequiredService<GraphQLHttpClient>());
     }
 }

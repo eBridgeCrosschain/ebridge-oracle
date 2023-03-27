@@ -24,7 +24,7 @@ internal class QueryCreatedProcessor : IQueryCreatedProcessor,ITransientDependen
     private readonly BridgeOptions _bridgeOptions;
     private readonly OracleOptions _oracleOptions;
     private readonly IOracleService _oracleService;
-    private readonly IChainIdProvider _chainIdProvider;
+    private readonly IChainProvider _chainProvider;
 
     private readonly ILogger<QueryCreatedProcessor> _logger;
 
@@ -34,7 +34,7 @@ internal class QueryCreatedProcessor : IQueryCreatedProcessor,ITransientDependen
         ILogger<QueryCreatedProcessor> logger,
         IOptionsSnapshot<BridgeOptions> bridgeOptions,
         IOptionsSnapshot<OracleOptions> oracleOptions,
-        IOracleService oracleService, IChainIdProvider chainIdProvider)
+        IOracleService oracleService, IChainProvider chainProvider)
     {
         _saltProvider = saltProvider;
         _dataProvider = dataProvider;
@@ -42,12 +42,12 @@ internal class QueryCreatedProcessor : IQueryCreatedProcessor,ITransientDependen
         _bridgeOptions = bridgeOptions.Value;
         _oracleOptions = oracleOptions.Value;
         _oracleService = oracleService;
-        _chainIdProvider = chainIdProvider;
+        _chainProvider = chainProvider;
     }
 
     public async Task ProcessAsync(string aelfChainId, OracleQueryInfoDto oracleQueryInfo)
     {
-        var chainId = _chainIdProvider.GetChainId(aelfChainId);
+        var chainId = _chainProvider.GetChainId(aelfChainId);
         
         var firstDesignatedNodeAddress = oracleQueryInfo.DesignatedNodeList.First();
         //var queryToken = queryCreated.Token; // Query token means the ethereum contract address oracle node should cares in report case.

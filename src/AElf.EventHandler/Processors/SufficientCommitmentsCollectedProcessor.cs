@@ -19,23 +19,23 @@ public class SufficientCommitmentsCollectedProcessor :ISufficientCommitmentsColl
     private readonly IDataProvider _dataProvider;
     private readonly ILogger<SufficientCommitmentsCollectedProcessor> _logger;
     private readonly IOracleService _oracleService;
-    private readonly IChainIdProvider _chainIdProvider;
+    private readonly IChainProvider _chainProvider;
 
     public SufficientCommitmentsCollectedProcessor(
         ISaltProvider saltProvider, IDataProvider dataProvider,
         ILogger<SufficientCommitmentsCollectedProcessor> logger,
-        IOracleService oracleService, IChainIdProvider chainIdProvider)
+        IOracleService oracleService, IChainProvider chainProvider)
     {
         _saltProvider = saltProvider;
         _dataProvider = dataProvider;
         _logger = logger;
         _oracleService = oracleService;
-        _chainIdProvider = chainIdProvider;
+        _chainProvider = chainProvider;
     }
     
     public async Task ProcessAsync(string aelfChainId, OracleQueryInfoDto oracleQueryInfo)
     {
-        var chainId = _chainIdProvider.GetChainId(aelfChainId);
+        var chainId = _chainProvider.GetChainId(aelfChainId);
         var queryId = Hash.LoadFromHex(oracleQueryInfo.QueryId);
         var data = await _dataProvider.GetDataAsync(queryId);
         if (string.IsNullOrEmpty(data))

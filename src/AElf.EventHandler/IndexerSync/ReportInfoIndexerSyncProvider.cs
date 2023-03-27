@@ -52,18 +52,23 @@ public class ReportInfoIndexerSyncProvider : IndexerSyncProviderBase
         return new GraphQLRequest
         {
             Query =
-                @"query($chainId:String,$startBlockHeight:Long!,$endBlockHeight:Long!,$methodNames: [String],$skipCount:Int!,$maxResultCount:Int!){
-            caHolderTransactionInfo(dto: {chainId:$chainId,startBlockHeight:$startBlockHeight,endBlockHeight:$endBlockHeight, methodNames:$methodNames,skipCount:$skipCount,maxResultCount:$maxResultCount}){
-                totalRecordCount,
+                @"query($chainId:String,$startBlockHeight:Long!,$endBlockHeight:Long!){
+            reportInfo(dto: {chainId:$chainId,startBlockHeight:$startBlockHeight,endBlockHeight:$endBlockHeight}){
                 data{
+                    id,
+                    chainId,
                     blockHash,
                     blockHeight,
-                    transactionId,
-                    methodName,
-                    transferInfo{
-                        fromChainId,
-                        toChainId
-                    }
+                    blockTime,
+                    roundId,
+                    token,
+                    targetChainId,
+                    receiptId,
+                    receiptHash,
+                    step,
+                    rawReport,
+                    signature,
+                    isAllNodeConfirmed                    
                 }
             }
         }",

@@ -25,13 +25,13 @@ public class ReportConfirmedProcessor : IReportConfirmedProcessor,ITransientDepe
     private readonly BridgeOptions _bridgeOptions;
     private readonly IReportService _reportService;
     private readonly IBridgeService _bridgeService;
-    private readonly IChainIdProvider _chainIdProvider;
+    private readonly IChainProvider _chainProvider;
 
     public ReportConfirmedProcessor(ILogger<ReportConfirmedProcessor> logger,
         ISignatureRecoverableInfoProvider signaturesRecoverableInfoProvider,
         ITransmitTransactionProvider transmitTransactionProvider,
         IOptionsSnapshot<BridgeOptions> bridgeOptions, IReportService reportService,
-        IBridgeService bridgeService, IChainIdProvider chainIdProvider) 
+        IBridgeService bridgeService, IChainProvider chainProvider) 
     {
         _logger = logger;
         _signaturesRecoverableInfoProvider = signaturesRecoverableInfoProvider;
@@ -39,12 +39,12 @@ public class ReportConfirmedProcessor : IReportConfirmedProcessor,ITransientDepe
         _bridgeOptions = bridgeOptions.Value;
         _reportService = reportService;
         _bridgeService = bridgeService;
-        _chainIdProvider = chainIdProvider;
+        _chainProvider = chainProvider;
     }
 
     public async Task ProcessAsync(string aelfChainId, ReportInfoDto reportQueryInfo)
     {
-        var chainId = _chainIdProvider.GetChainId(aelfChainId);
+        var chainId = _chainProvider.GetChainId(aelfChainId);
         var targetChainId = reportQueryInfo.TargetChainId;
         var ethereumContractAddress = reportQueryInfo.Token;
         var roundId = reportQueryInfo.RoundId;

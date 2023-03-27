@@ -64,7 +64,7 @@ public abstract class IndexerSyncProviderBase : IIndexerSyncProvider, ITransient
 
         return data.SyncState.ConfirmedBlockHeight;
     }
-
+    
     protected async Task<long> GetSyncHeightAsync(string chainId)
     {
         var height = await _distributedCache.GetAsync(GetSyncHeightKey(chainId));
@@ -78,7 +78,7 @@ public abstract class IndexerSyncProviderBase : IIndexerSyncProvider, ITransient
 
     private string GetSyncHeightKey(string chainId)
     {
-        return $"{chainId}-{SyncType}";
+        return $"IndexerSync-{chainId}-{SyncType}";
     }
 
     protected abstract string SyncType { get; }

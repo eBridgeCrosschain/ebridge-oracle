@@ -23,7 +23,7 @@ public class ReportProposedProcessor : IReportProposedProcessor,ITransientDepend
     private readonly IReportService _reportService;
     private readonly IAElfAccountProvider _accountProvider;
     private readonly AElfClientConfigOptions _aelfClientConfigOptions;
-    private readonly IChainIdProvider _chainIdProvider;
+    private readonly IChainProvider _chainProvider;
 
     private readonly ILogger<ReportProposedProcessor> _logger;
 
@@ -32,10 +32,10 @@ public class ReportProposedProcessor : IReportProposedProcessor,ITransientDepend
         IReportService reportService,
         IAElfAccountProvider accountProvider,
         ILogger<ReportProposedProcessor> logger,
-        IOptionsSnapshot<AElfClientConfigOptions> aelfConfigOptions, IChainIdProvider chainIdProvider)
+        IOptionsSnapshot<AElfClientConfigOptions> aelfConfigOptions, IChainProvider chainProvider)
     {
         _logger = logger;
-        _chainIdProvider = chainIdProvider;
+        _chainProvider = chainProvider;
         _reportProvider = reportProvider;
         _reportService = reportService;
         _accountProvider = accountProvider;
@@ -45,7 +45,7 @@ public class ReportProposedProcessor : IReportProposedProcessor,ITransientDepend
     public async Task ProcessAsync(string aelfChainId, ReportInfoDto reportQueryInfo)
     {
         //TODO:Check permission
-        var chainId = _chainIdProvider.GetChainId(aelfChainId);
+        var chainId = _chainProvider.GetChainId(aelfChainId);
         var privateKey = _accountProvider.GetPrivateKey(_aelfClientConfigOptions.AccountAlias);
         
         var sendTxResult = await _reportService.ConfirmReportAsync(chainId,new ConfirmReportInput
