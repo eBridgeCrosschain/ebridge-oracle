@@ -17,6 +17,7 @@ using Microsoft.Extensions.Options;
 using RabbitMQ.Client;
 using Volo.Abp;
 using Volo.Abp.Autofac;
+using Volo.Abp.AutoMapper;
 using Volo.Abp.BackgroundWorkers;
 using Volo.Abp.Caching.StackExchangeRedis;
 using Volo.Abp.EventBus.RabbitMq;
@@ -36,7 +37,8 @@ namespace AElf.EventHandler;
     typeof(AElfClientMerkleTreeModule),
     typeof(AElfNethereumBridgeModule),
     typeof(AbpCachingStackExchangeRedisModule),
-    typeof(AbpBackgroundWorkersModule)
+    typeof(AbpBackgroundWorkersModule),
+    typeof(AbpAutoMapperModule)
 )]
 public class EventHandlerAppModule : AbpModule
 {
@@ -80,22 +82,29 @@ public class EventHandlerAppModule : AbpModule
         Configure<BlockConfirmationOptions>(configuration.GetSection("BlockConfirmation"));
         Configure<ChainIdMappingOptions>(configuration.GetSection("ChainIdMapping"));
         Configure<FaultHandlingOptions>(configuration.GetSection("FaultHandling"));
+        Configure<RetryTransmitInfoOptions>(configuration.GetSection("RetryTransmitInfo"));
         
         context.Services.AddHostedService<EventHandlerAppHostedService>();
         context.Services.AddTransient(typeof(ILogEventProcessor<>), typeof(LogEventProcessorBase<>));
         context.Services.AddSingleton<ITransmitTransactionProvider, TransmitTransactionProvider>();
         context.Services.AddSingleton<ISignatureRecoverableInfoProvider, SignatureRecoverableInfoProvider>();
+        
+        context.Services.AddAutoMapperObjectMapper<EventHandlerAppModule>();
+
+        Configure<AbpAutoMapperOptions>(options =>
+        {
+            options.AddMaps<EventHandlerAppModule>();
+        });
     }
     public override void OnApplicationInitialization(ApplicationInitializationContext context)
     {
-        context.AddBackgroundWorkerAsync<TransmitTransactionWorker>();
         context.AddBackgroundWorkerAsync<ReceiptSyncWorker>();
 
         var faultHandlingOptions = context.ServiceProvider.GetRequiredService<IOptionsSnapshot<FaultHandlingOptions>>();
         if (faultHandlingOptions.Value.IsReSendFailedJob)
         {
             var service = context.ServiceProvider.GetRequiredService<ITransmitTransactionProvider>();
-            AsyncHelper.RunSync(async()=> await service.ReSendFailedJobAsync(faultHandlingOptions.Value.ReSendFailedJobChainId));
+            AsyncHelper.RunSync(async()=> await service.ReSendFailedJobAsync());
         }
     }
 }

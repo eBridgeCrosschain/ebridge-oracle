@@ -40,7 +40,7 @@ public class IrreversibleBlockFoundLogEventProcessor : LogEventProcessorBase<Irr
 
         var chainId = ChainIdProvider.GetChainId(context.ChainId);
         var clientAlias = _chainAliasOptions.Mapping[chainId];
-        var block = await _aelfClientService.GetBlockByHeightAsync(clientAlias,libFound.IrreversibleBlockHeight);
-        await _transmitTransactionProvider.SendByLibAsync(chainId, block.BlockHash, block.Header.Height);
+        //var block = await _aelfClientService.GetBlockByHeightAsync(clientAlias,libFound.IrreversibleBlockHeight);
+        //await _transmitTransactionProvider.SendByLibAsync(chainId, block.BlockHash, block.Header.Height);
     }
 }

@@ -8,11 +8,13 @@ using AElf.Client.Core.Extensions;
 using AElf.Client.Core.Options;
 using AElf.Client.Report;
 using AElf.Contracts.Report;
+using AElf.EventHandler.Dto;
 using AElf.Nethereum.Core.Options;
 using AElf.Types;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Volo.Abp.DependencyInjection;
+using Volo.Abp.EventBus.Distributed;
 
 namespace AElf.EventHandler;
 
@@ -21,30 +23,26 @@ internal class ReportConfirmedLogEventProcessor : LogEventProcessorBase<ReportCo
     public override string ContractName => "ReportContract";
     private readonly ILogger<ReportConfirmedLogEventProcessor> _logger;
     private readonly ISignatureRecoverableInfoProvider _signaturesRecoverableInfoProvider;
-    private readonly EthereumContractOptions _ethereumContractOptions;
-    private readonly IReportProvider _reportProvider;
-    private readonly ITransmitTransactionProvider _transmitTransactionProvider;
     private readonly BridgeOptions _bridgeOptions;
     private readonly IReportService _reportService;
     private readonly IBridgeService _bridgeService;
+    private readonly IDistributedEventBus _distributedEventBus;
 
-    public ReportConfirmedLogEventProcessor(ILogger<ReportConfirmedLogEventProcessor> logger,
+    public ReportConfirmedLogEventProcessor(
+        ILogger<ReportConfirmedLogEventProcessor> logger,
         IOptionsSnapshot<AElfContractOptions> contractAddressOptions,
-        IReportProvider reportProvider,
         ISignatureRecoverableInfoProvider signaturesRecoverableInfoProvider,
-        IOptionsSnapshot<EthereumContractOptions> ethereumContractOptions,
-        ITransmitTransactionProvider transmitTransactionProvider,
-        IOptionsSnapshot<BridgeOptions> bridgeOptions, IReportService reportService,
-        IBridgeService bridgeService) : base(contractAddressOptions)
+        IOptionsSnapshot<BridgeOptions> bridgeOptions, 
+        IReportService reportService,
+        IBridgeService bridgeService, 
+        IDistributedEventBus distributedEventBus) : base(contractAddressOptions)
     {
         _logger = logger;
         _signaturesRecoverableInfoProvider = signaturesRecoverableInfoProvider;
-        _transmitTransactionProvider = transmitTransactionProvider;
-        _ethereumContractOptions = ethereumContractOptions.Value;
-        _reportProvider = reportProvider;
         _bridgeOptions = bridgeOptions.Value;
         _reportService = reportService;
         _bridgeService = bridgeService;
+        _distributedEventBus = distributedEventBus;
     }
 
     public override async Task ProcessAsync(LogEvent logEvent, EventContext context)
@@ -56,7 +54,7 @@ internal class ReportConfirmedLogEventProcessor : LogEventProcessorBase<ReportCo
         var targetChainId = reportConfirmed.TargetChainId;
         var ethereumContractAddress = reportConfirmed.Token;
         var roundId = reportConfirmed.RoundId;
-        
+
         //TODO:check permission
         await _signaturesRecoverableInfoProvider.SetSignatureAsync(chainId, ethereumContractAddress, roundId,
             reportConfirmed.Signature);
@@ -85,9 +83,11 @@ internal class ReportConfirmedLogEventProcessor : LogEventProcessorBase<ReportCo
                 var receiptIdTokenHash = receiptId.Split(".").First();
                 var receiptIdInfo = await _bridgeService.GetReceiptIdInfoAsync(chainId,
                     Hash.LoadFromHex(receiptIdTokenHash));
-                
+
                 var ethereumSwapId =
-                    (_bridgeOptions.BridgesOut.Single(i => i.TargetChainId == targetChainId && i.OriginToken == receiptIdInfo.Symbol && i.ChainId == ChainIdProvider.GetChainId(context.ChainId)))
+                    (_bridgeOptions.BridgesOut.Single(i =>
+                        i.TargetChainId == targetChainId && i.OriginToken == receiptIdInfo.Symbol &&
+                        i.ChainId == ChainIdProvider.GetChainId(context.ChainId)))
                     .EthereumSwapId;
 
                 var (swapHashId, reportBytes, rs, ss, vs) =
@@ -95,24 +95,8 @@ internal class ReportConfirmedLogEventProcessor : LogEventProcessorBase<ReportCo
 
                 _logger.LogInformation(
                     $"Try to transmit data, TargetChainId: {reportConfirmed.TargetChainId} Address: {ethereumContractAddress}  RoundId: {reportConfirmed.RoundId}");
-               
-                for (var i = 0; i< rs.Length;i++)
-                {
-                    _logger.LogInformation(
-                        $"From chainId:{chainId}" +
-                        $"TargetContractAddress:{ethereumContractAddress}" +
-                        $"TargetChainId:{reportConfirmed.TargetChainId}" +
-                        $"Report:{reportBytes.ToHex()}" +
-                        $"Rs[{i}]:{rs[i].ToHex()}" +
-                        $"Ss[{i}]:{ss[i].ToHex()}" +
-                        $"RawVs:{vs.ToHex()}" +
-                        $"SwapHashId:{swapHashId.ToHex()}" +
-                        $"BlockHash:{context.BlockHash}" +
-                        $"BlockHeight:{context.BlockNumber}"
-                    );
-                }
-                
-                await _transmitTransactionProvider.EnqueueAsync(new SendTransmitArgs
+
+                await _distributedEventBus.PublishAsync(new TransmitEto
                 {
                     ChainId = chainId,
                     TargetContractAddress = ethereumContractAddress,
@@ -125,7 +109,6 @@ internal class ReportConfirmedLogEventProcessor : LogEventProcessorBase<ReportCo
                     BlockHash = context.BlockHash,
                     BlockHeight = context.BlockNumber
                 });
-                
 
                 await _signaturesRecoverableInfoProvider.RemoveSignatureAsync(chainId,
                     ethereumContractAddress, roundId);
@@ -149,7 +132,7 @@ internal class ReportConfirmedLogEventProcessor : LogEventProcessorBase<ReportCo
             v[index] = recoverableInfoBytes.Last();
             index++;
         }
-        
+
         return (ByteStringHelper.FromHexString(swapId).ToByteArray(),
             ByteStringHelper.FromHexString(report).ToByteArray(), r, s, v);
     }
