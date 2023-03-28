@@ -22,18 +22,15 @@ public class PriceSyncWorker : AsyncPeriodicBackgroundWorkerBase
     private readonly IBridgeService _bridgeService;
     private readonly IBlockchainTransactionFeeService _blockchainTransactionFeeService;
     private readonly ITokenPriceService _tokenPriceService;
-    private readonly IAElfClientService _aelfClientService;
-
     public PriceSyncWorker(AbpAsyncTimer timer, IServiceScopeFactory serviceScopeFactory,
         IOptionsSnapshot<PriceSyncOptions> priceSyncOptions, IBridgeService bridgeService,
-        IBlockchainTransactionFeeService blockchainTransactionFeeService, ITokenPriceService tokenPriceService,
-        IAElfClientService aelfClientService) : base(
+        IBlockchainTransactionFeeService blockchainTransactionFeeService, ITokenPriceService tokenPriceService
+        ) : base(
         timer, serviceScopeFactory)
     {
         _bridgeService = bridgeService;
         _blockchainTransactionFeeService = blockchainTransactionFeeService;
         _tokenPriceService = tokenPriceService;
-        _aelfClientService = aelfClientService;
         _priceSyncOptions = priceSyncOptions.Value;
 
         Timer.Period = 1000 * 60;
@@ -55,7 +52,7 @@ public class PriceSyncWorker : AsyncPeriodicBackgroundWorkerBase
                 GasPrice_ = feeWei
             });
         
-            decimal nativePrice = await _tokenPriceService.GetPriceAsync(item.NativeToken);
+            var nativePrice = await _tokenPriceService.GetPriceAsync(item.NativeToken);
             var ratio = (long)(nativePrice * (decimal)Math.Pow(10, 8) / elfPrice);
             setPriceRatioInput.Value.Add(new PriceRatio
             {
