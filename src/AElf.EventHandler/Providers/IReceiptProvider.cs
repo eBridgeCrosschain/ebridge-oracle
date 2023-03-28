@@ -85,13 +85,15 @@ public class ReceiptProvider : IReceiptProvider, ITransientDependency
             var targetChainIdList = item.Select(i => i.TargetChainId).ToList();
             var tokenAndChainIdList = item.Select(i => (i.TargetChainId, i.OriginToken)).ToList();
             _logger.LogInformation(
-                $"Start to get transfer receipt from ethereum. From chainId:{aliasAddress.Item1},ethereum bridgeIn contract address:{aliasAddress.Item2}");
+                "Start to get transfer receipt from ethereum. From chainId:{0},ethereum bridgeIn contract address:{1}",
+                aliasAddress.Item1, aliasAddress.Item2);
             var sendReceiptIndexDto = await _bridgeInService.GetTransferReceiptIndexAsync(aliasAddress.Item1,
                 aliasAddress.Item2, tokenList, targetChainIdList);
             for (var i = 0; i < tokenList.Count; i++)
             {
                 _logger.LogInformation(
-                    $"Transfer token:{tokenAndChainIdList[i].OriginToken}, target chain id:{tokenAndChainIdList[i].TargetChainId}, token index:{sendReceiptIndexDto.Indexes[i]}");
+                    "Transfer token:{0}, target chain id:{1}, token index:{2}", tokenAndChainIdList[i].OriginToken,
+                    tokenAndChainIdList[i].TargetChainId, sendReceiptIndexDto.Indexes[i]);
                 tokenIndex[tokenAndChainIdList[i]] = sendReceiptIndexDto.Indexes[i];
                 var targetChainId = _bridgeOptions.BridgesIn.Single(j => j.SwapId == item[i].SwapId).TargetChainId;
                 await SendQueryAsync(targetChainId, item[i], tokenIndex[(item[i].TargetChainId, item[i].OriginToken)]);
@@ -107,6 +109,7 @@ public class ReceiptProvider : IReceiptProvider, ITransientDependency
         {
             return;
         }
+
         var spaceId = await _bridgeContractService.GetSpaceIdBySwapIdAsync(chainId, Hash.LoadFromHex(swapId));
         var lastRecordedLeafIndex = (await _merkleTreeContractService.GetLastLeafIndexAsync(
             chainId, new GetLastLeafIndexInput
@@ -115,7 +118,7 @@ public class ReceiptProvider : IReceiptProvider, ITransientDependency
             })).Value;
         if (lastRecordedLeafIndex == -1)
         {
-            _logger.LogInformation($"Space of id {spaceId} is not created. ");
+            _logger.LogInformation("Space of id {0} is not created.", spaceId);
             return;
         }
 
@@ -128,13 +131,16 @@ public class ReceiptProvider : IReceiptProvider, ITransientDependency
         {
             var receiptIndexNow = _latestQueriedReceiptCountProvider.Get(swapId);
             _logger.LogInformation(
-                $"Latest queried receipt index : {receiptIndexNow}, Last recorded leaf index : {nextTokenIndex}, Wait.");
+                "Latest queried receipt index : {0}, Last recorded leaf index : {1}, Wait.", receiptIndexNow,
+                nextTokenIndex);
             return;
         }
 
         var nextRoundStartTokenIndex = _latestQueriedReceiptCountProvider.Get(swapId);
         _logger.LogInformation(
-            $"{bridgeItem.ChainId}-{bridgeItem.TargetChainId}-{bridgeItem.OriginToken},Last recorded leaf index : {lastRecordedLeafIndex}. Next round to query should begin with receipt Index:{nextRoundStartTokenIndex}");
+            "{0}-{1}-{2},Last recorded leaf index : {3}. Next round to query should begin with receipt Index:{4}",
+            bridgeItem.ChainId, bridgeItem.TargetChainId, bridgeItem.OriginToken, lastRecordedLeafIndex,
+            nextRoundStartTokenIndex);
 
         if (tokenIndex < nextRoundStartTokenIndex)
         {
@@ -165,19 +171,21 @@ public class ReceiptProvider : IReceiptProvider, ITransientDependency
         }
 
         _logger.LogInformation(
-            $"{bridgeItem.ChainId}-{bridgeItem.TargetChainId}-{bridgeItem.OriginToken}.Token hash in receipt id:{receiptIdHash},Last confirmed receipt index:{lastTokenIndexConfirm}.");
+            "{0}-{1}-{2}.Token hash in receipt id:{3},Last confirmed receipt index:{4}.", bridgeItem.ChainId,
+            bridgeItem.TargetChainId, bridgeItem.OriginToken, receiptIdHash, lastTokenIndexConfirm);
 
         if (lastTokenIndexConfirm - nextRoundStartTokenIndex < 0) return;
 
         _logger.LogInformation(
-            $"{bridgeItem.ChainId}-{bridgeItem.TargetChainId}-{bridgeItem.OriginToken}.Start to query token : from receipt index {nextRoundStartTokenIndex},end receipt index {lastTokenIndexConfirm}");
-        
+            "{0}-{1}-{2}.Start to query token : from receipt index {3},end receipt index {4}", bridgeItem.ChainId,
+            bridgeItem.TargetChainId, bridgeItem.OriginToken, nextRoundStartTokenIndex, lastTokenIndexConfirm);
+
         await SendQueryOracleAsync(swapId, chainId, receiptIdHash, nextRoundStartTokenIndex, lastTokenIndexConfirm,
             bridgeItem.QueryToAddress);
-
     }
 
-    private async Task SendQueryOracleAsync(string swapId,string chainId,string receiptIdHash,long nextRoundStartTokenIndex,long lastTokenIndexConfirm,string queryToAddress)
+    private async Task SendQueryOracleAsync(string swapId, string chainId, string receiptIdHash,
+        long nextRoundStartTokenIndex, long lastTokenIndexConfirm, string queryToAddress)
     {
         var queryInput = new QueryInput
         {
@@ -206,7 +214,7 @@ public class ReceiptProvider : IReceiptProvider, ITransientDependency
         _latestQueriedReceiptCountProvider.Set(DateTime.UtcNow, swapId, lastTokenIndexConfirm + 1);
         var sendTxResult = await _oracleService.QueryAsync(chainId, queryInput);
         _logger.LogInformation(
-            $"Query transaction id : {sendTxResult.TransactionResult.TransactionId}.Next receipt index should start with: {_latestQueriedReceiptCountProvider.Get(swapId)}");
-
+            "Query transaction id : {0}.Next receipt index should start with: {1}",
+            sendTxResult.TransactionResult.TransactionId, _latestQueriedReceiptCountProvider.Get(swapId));
     }
 }
