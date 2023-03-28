@@ -29,17 +29,16 @@ public class ReceiptProvider : IReceiptProvider, ITransientDependency
     private readonly IBridgeInService _bridgeInService;
     private readonly INethereumService _nethereumService;
     private readonly IOracleService _oracleService;
-    private readonly AElfChainAliasOptions _aelfChainAliasOptions;
     private readonly IBridgeService _bridgeContractService;
     private readonly IMerkleTreeContractService _merkleTreeContractService;
     private readonly ILatestQueriedReceiptCountProvider _latestQueriedReceiptCountProvider;
     private readonly ILogger<ReceiptProvider> _logger;
     private readonly AElfContractOptions _contractOptions;
     private readonly BlockConfirmationOptions _blockConfirmationOptions;
+    private const long MaxQueryRange = 100;
 
     public ReceiptProvider(
         IOptionsSnapshot<BridgeOptions> bridgeOptions,
-        IOptionsSnapshot<AElfChainAliasOptions> aelfChainAliasOption,
         IOptionsSnapshot<BlockConfirmationOptions> blockConfirmation,
         IOptionsSnapshot<AElfContractOptions> contractOptions,
         IBridgeInService bridgeInService,
@@ -56,7 +55,6 @@ public class ReceiptProvider : IReceiptProvider, ITransientDependency
         _oracleService = oracleService;
         _bridgeContractService = bridgeService;
         _merkleTreeContractService = merkleTreeContractService;
-        _aelfChainAliasOptions = aelfChainAliasOption.Value;
         _latestQueriedReceiptCountProvider = latestQueriedReceiptCountProvider;
         _logger = logger;
         _contractOptions = contractOptions.Value;
@@ -92,7 +90,8 @@ public class ReceiptProvider : IReceiptProvider, ITransientDependency
             for (var i = 0; i < tokenList.Count; i++)
             {
                 _logger.LogInformation(
-                    "Transfer token:{Token}, target chain id:{ChainId}, token index:{Index}", tokenAndChainIdList[i].OriginToken,
+                    "Transfer token:{Token}, target chain id:{ChainId}, token index:{Index}",
+                    tokenAndChainIdList[i].OriginToken,
                     tokenAndChainIdList[i].TargetChainId, sendReceiptIndexDto.Indexes[i]);
                 tokenIndex[tokenAndChainIdList[i]] = sendReceiptIndexDto.Indexes[i];
                 var targetChainId = _bridgeOptions.BridgesIn.Single(j => j.SwapId == item[i].SwapId).TargetChainId;
@@ -147,6 +146,9 @@ public class ReceiptProvider : IReceiptProvider, ITransientDependency
             return;
         }
 
+        tokenIndex = tokenIndex - nextRoundStartTokenIndex + 1 > MaxQueryRange
+            ? nextRoundStartTokenIndex + MaxQueryRange - 1
+            : tokenIndex;
         var notRecordTokenNumber = tokenIndex - nextRoundStartTokenIndex + 1;
         if (notRecordTokenNumber <= 0) return;
 
@@ -171,13 +173,15 @@ public class ReceiptProvider : IReceiptProvider, ITransientDependency
         }
 
         _logger.LogInformation(
-            "{ChainId}-{TargetId}-{Token}.Token hash in receipt id:{Id},Last confirmed receipt index:{Index}", bridgeItem.ChainId,
+            "{ChainId}-{TargetId}-{Token}.Token hash in receipt id:{Id},Last confirmed receipt index:{Index}",
+            bridgeItem.ChainId,
             bridgeItem.TargetChainId, bridgeItem.OriginToken, receiptIdHash, lastTokenIndexConfirm);
 
         if (lastTokenIndexConfirm - nextRoundStartTokenIndex < 0) return;
 
         _logger.LogInformation(
-            "{ChainId}-{TargetId}-{Token}.Start to query token : from receipt index {Index},end receipt index {EndIndex}", bridgeItem.ChainId,
+            "{ChainId}-{TargetId}-{Token}.Start to query token : from receipt index {Index},end receipt index {EndIndex}",
+            bridgeItem.ChainId,
             bridgeItem.TargetChainId, bridgeItem.OriginToken, nextRoundStartTokenIndex, lastTokenIndexConfirm);
 
         await SendQueryOracleAsync(swapId, chainId, receiptIdHash, nextRoundStartTokenIndex, lastTokenIndexConfirm,
