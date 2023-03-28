@@ -17,7 +17,7 @@ public interface IReportConfirmedProcessor
     Task ProcessAsync(string aelfChainId, ReportInfoDto reportQueryInfo);
 }
 
-public class ReportConfirmedProcessor : IReportConfirmedProcessor,ITransientDependency
+public class ReportConfirmedProcessor : IReportConfirmedProcessor, ITransientDependency
 {
     private readonly ILogger<ReportConfirmedProcessor> _logger;
     private readonly ISignatureRecoverableInfoProvider _signaturesRecoverableInfoProvider;
@@ -31,7 +31,7 @@ public class ReportConfirmedProcessor : IReportConfirmedProcessor,ITransientDepe
         ISignatureRecoverableInfoProvider signaturesRecoverableInfoProvider,
         ITransmitTransactionProvider transmitTransactionProvider,
         IOptionsSnapshot<BridgeOptions> bridgeOptions, IReportService reportService,
-        IBridgeService bridgeService, IChainProvider chainProvider) 
+        IBridgeService bridgeService, IChainProvider chainProvider)
     {
         _logger = logger;
         _signaturesRecoverableInfoProvider = signaturesRecoverableInfoProvider;
@@ -48,65 +48,63 @@ public class ReportConfirmedProcessor : IReportConfirmedProcessor,ITransientDepe
         var targetChainId = reportQueryInfo.TargetChainId;
         var ethereumContractAddress = reportQueryInfo.Token;
         var roundId = reportQueryInfo.RoundId;
-        
+
         //TODO:check permission
         await _signaturesRecoverableInfoProvider.SetSignatureAsync(chainId, ethereumContractAddress, roundId,
             reportQueryInfo.Signature);
-        if (reportQueryInfo.IsAllNodeConfirmed)
+        if (!reportQueryInfo.IsAllNodeConfirmed) return;
+        if (!_bridgeOptions.IsTransmitter) return;
+        var report = await _reportService.GetRawReportAsync(chainId, new GetRawReportInput
         {
-            if (_bridgeOptions.IsTransmitter)
-            {
-                var report = await _reportService.GetRawReportAsync(chainId, new GetRawReportInput
-                {
-                    ChainId = targetChainId,
-                    Token = ethereumContractAddress,
-                    RoundId = roundId
-                });
-                _logger.LogInformation("Confirm raw report:{Report}",report.Value);
-                var signatureRecoverableInfos =
-                    await _signaturesRecoverableInfoProvider.GetSignatureAsync(chainId,
-                        ethereumContractAddress, roundId);
+            ChainId = targetChainId,
+            Token = ethereumContractAddress,
+            RoundId = roundId
+        });
+        _logger.LogInformation("Confirm raw report:{Report}", report.Value);
+        var signatureRecoverableInfos =
+            await _signaturesRecoverableInfoProvider.GetSignatureAsync(chainId,
+                ethereumContractAddress, roundId);
 
-                //GetSwapId
-                var receiptId = (await _reportService.GetReportAsync(chainId, new GetReportInput
-                {
-                    ChainId = targetChainId,
-                    Token = ethereumContractAddress,
-                    RoundId = roundId
-                })).Observations.Value.First().Key;
-                var receiptIdTokenHash = receiptId.Split(".").First();
-                var receiptIdInfo = await _bridgeService.GetReceiptIdInfoAsync(chainId,
-                    Hash.LoadFromHex(receiptIdTokenHash));
-                
-                var ethereumSwapId =
-                    (_bridgeOptions.BridgesOut.Single(i => i.TargetChainId == targetChainId && i.OriginToken == receiptIdInfo.Symbol && i.ChainId == chainId))
-                    .EthereumSwapId;
+        //GetSwapId
+        var receiptId = (await _reportService.GetReportAsync(chainId, new GetReportInput
+        {
+            ChainId = targetChainId,
+            Token = ethereumContractAddress,
+            RoundId = roundId
+        })).Observations.Value.First().Key;
+        var receiptIdTokenHash = receiptId.Split(".").First();
+        var receiptIdInfo = await _bridgeService.GetReceiptIdInfoAsync(chainId,
+            Hash.LoadFromHex(receiptIdTokenHash));
 
-                var (swapHashId, reportBytes, rs, ss, vs) =
-                    TransferToEthereumParameter(ethereumSwapId, report.Value, signatureRecoverableInfos);
+        var ethereumSwapId =
+            (_bridgeOptions.BridgesOut.Single(i =>
+                i.TargetChainId == targetChainId && i.OriginToken == receiptIdInfo.Symbol && i.ChainId == chainId))
+            .EthereumSwapId;
 
-                _logger.LogInformation(
-                    "Try to transmit data, TargetChainId: {ChainId} Address: {Address}  RoundId: {RoundId}",reportQueryInfo.TargetChainId,ethereumContractAddress,reportQueryInfo.RoundId);
+        var (swapHashId, reportBytes, rs, ss, vs) =
+            TransferToEthereumParameter(ethereumSwapId, report.Value, signatureRecoverableInfos);
 
-                await _transmitTransactionProvider.EnqueueAsync(new SendTransmitArgs
-                {
-                    ChainId = chainId,
-                    TargetContractAddress = ethereumContractAddress,
-                    TargetChainId = reportQueryInfo.TargetChainId,
-                    Report = reportBytes,
-                    Rs = rs,
-                    Ss = ss,
-                    RawVs = vs,
-                    SwapHashId = swapHashId,
-                    BlockHash = reportQueryInfo.BlockHash,
-                    BlockHeight = reportQueryInfo.BlockHeight
-                });
-                
+        _logger.LogInformation(
+            "Try to transmit data, TargetChainId: {ChainId} Address: {Address}  RoundId: {RoundId}",
+            reportQueryInfo.TargetChainId, ethereumContractAddress, reportQueryInfo.RoundId);
 
-                await _signaturesRecoverableInfoProvider.RemoveSignatureAsync(chainId,
-                    ethereumContractAddress, roundId);
-            }
-        }
+        await _transmitTransactionProvider.EnqueueAsync(new SendTransmitArgs
+        {
+            ChainId = chainId,
+            TargetContractAddress = ethereumContractAddress,
+            TargetChainId = reportQueryInfo.TargetChainId,
+            Report = reportBytes,
+            Rs = rs,
+            Ss = ss,
+            RawVs = vs,
+            SwapHashId = swapHashId,
+            BlockHash = reportQueryInfo.BlockHash,
+            BlockHeight = reportQueryInfo.BlockHeight
+        });
+
+
+        await _signaturesRecoverableInfoProvider.RemoveSignatureAsync(chainId,
+            ethereumContractAddress, roundId);
     }
 
     public (byte[], byte[], byte[][], byte[][], byte[]) TransferToEthereumParameter(string swapId, string report,
