@@ -19,7 +19,6 @@ public interface IReportProposedProcessor
 
 public class ReportProposedProcessor : IReportProposedProcessor,ITransientDependency
 {
-    private readonly IReportProvider _reportProvider;
     private readonly IReportService _reportService;
     private readonly IAElfAccountProvider _accountProvider;
     private readonly AElfClientConfigOptions _aelfClientConfigOptions;
@@ -28,7 +27,6 @@ public class ReportProposedProcessor : IReportProposedProcessor,ITransientDepend
     private readonly ILogger<ReportProposedProcessor> _logger;
 
     public ReportProposedProcessor(
-        IReportProvider reportProvider,
         IReportService reportService,
         IAElfAccountProvider accountProvider,
         ILogger<ReportProposedProcessor> logger,
@@ -36,7 +34,6 @@ public class ReportProposedProcessor : IReportProposedProcessor,ITransientDepend
     {
         _logger = logger;
         _chainProvider = chainProvider;
-        _reportProvider = reportProvider;
         _reportService = reportService;
         _accountProvider = accountProvider;
         _aelfClientConfigOptions = aelfConfigOptions.Value;
@@ -56,6 +53,6 @@ public class ReportProposedProcessor : IReportProposedProcessor,ITransientDepend
             Signature = SignHelper
                 .GetSignature(reportQueryInfo.RawReport, privateKey).RecoverInfo
         });
-        _logger.LogInformation($"[ConfirmReport] Transaction id ： {sendTxResult.TransactionResult.TransactionId}");
+        _logger.LogInformation("[ConfirmReport] Transaction id :{Id}",sendTxResult.TransactionResult.TransactionId);
     }
 }

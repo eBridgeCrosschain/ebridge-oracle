@@ -28,10 +28,8 @@ public class DataProvider : IDataProvider, ISingletonDependency
 {
     private readonly Dictionary<Hash, string> _dictionary;
     private readonly ILogger<DataProvider> _logger;
-    private readonly string _bridgeAbi;
-    private Web3Manager _web3ManagerForLock;
-    private BridgeOptions _bridgeOptions;
-    private IBridgeInService _bridgeInService;
+    private readonly BridgeOptions _bridgeOptions;
+    private readonly IBridgeInService _bridgeInService;
 
     public DataProvider(
         ILogger<DataProvider> logger, 
@@ -58,20 +56,20 @@ public class DataProvider : IDataProvider, ISingletonDependency
 
         if (title == null || options == null)
         {
-            _logger.LogError($"No data of {queryId} for revealing.");
+            _logger.LogError("No data of {Id} for revealing",queryId);
             return string.Empty;
         }
 
         if (title.StartsWith("record_receipts") && options.Count == 2)
         {
             var swapId = title.Split('_').Last();
-            _logger.LogInformation($"Trying to query record receipt data. Swap id: {swapId}");
+            _logger.LogInformation("Trying to query record receipt data. Swap id: {Id}",swapId);
             var bridgeItem = _bridgeOptions.BridgesIn.Single(c => c.SwapId == swapId);
-            _logger.LogInformation("About to handle record receipt hashes for swapping tokens.");
+            _logger.LogInformation("About to handle record receipt hashes for swapping tokens");
             var recordReceiptHashInput =
                 await GetReceiptHashMap(Hash.LoadFromHex(swapId), bridgeItem, long.Parse(options[0].Split(".").Last()),
                     long.Parse(options[1].Split(".").Last()));
-            _logger.LogInformation($"RecordReceiptHashInput: {recordReceiptHashInput}");
+            _logger.LogInformation("RecordReceiptHashInput: {Input}",recordReceiptHashInput);
             _dictionary[queryId] = recordReceiptHashInput;
             return recordReceiptHashInput;
         }
@@ -98,7 +96,7 @@ public class DataProvider : IDataProvider, ISingletonDependency
 
                 if (decimal.TryParse(singleData, out var decimalData))
                 {
-                    _logger.LogInformation($"Add {singleData} to data list.");
+                    _logger.LogInformation("Add {Data} to data list",singleData);
                     dataList.Add(decimalData);
                 }
                 else
@@ -146,14 +144,14 @@ public class DataProvider : IDataProvider, ISingletonDependency
         var finalPrice = dataList.OrderBy(p => p).ToList()[dataList.Count / 2]
             .ToString(CultureInfo.InvariantCulture);
 
-        _logger.LogInformation($"Final price: {finalPrice}");
+        _logger.LogInformation("Final price: {Price}",finalPrice);
 
         return finalPrice;
     }
 
     public async Task<string> GetSingleUrlDataAsync(string url, List<string> attributes)
     {
-        _logger.LogInformation($"Querying {url} for attributes {attributes.First()} etc..");
+        _logger.LogInformation("Querying {Url} for attributes {Attribute} etc",url,attributes.First());
 
         var data = string.Empty;
         var response = string.Empty;
@@ -165,12 +163,12 @@ public class DataProvider : IDataProvider, ISingletonDependency
         }
         catch (Exception e)
         {
-            _logger.LogError($"Error during querying: {e.Message}");
+            _logger.LogError("Error during querying: {Message}",e.Message);
         }
 
         try
         {
-            _logger.LogInformation($"Trying to parse response to json: {response}");
+            _logger.LogInformation("Trying to parse response to json: {Response}",response);
 
             if (response != string.Empty)
             {
@@ -179,14 +177,14 @@ public class DataProvider : IDataProvider, ISingletonDependency
         }
         catch (Exception e)
         {
-            _logger.LogError($"Error during parsing json: {response}\n{e.Message}");
+            _logger.LogError("Error during parsing json: {Response}\n{Message}",response,e.Message);
             throw;
         }
 
         if (string.IsNullOrEmpty(data))
         {
             data = "0";
-            _logger.LogError($"Failed to get {attributes.First()} from {response}, will just return 0.");
+            _logger.LogError("Failed to get {Attribute} from {Response}, will just return 0",attributes.First(),response);
 
         }
 

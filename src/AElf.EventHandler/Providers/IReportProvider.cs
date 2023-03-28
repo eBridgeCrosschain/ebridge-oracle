@@ -37,12 +37,12 @@ namespace AElf.EventHandler
         {
             if (!_reportDictionary.TryGetValue(ethereumContractAddress, out var roundReport))
             {
-                _logger.LogInformation($"Address: {ethereumContractAddress} report dose not exist");
+                _logger.LogInformation("Address: {Address} report dose not exist",ethereumContractAddress);
                 return string.Empty;
             }
 
             if (roundReport.TryGetValue(roundId, out var report)) return report;
-            _logger.LogInformation($"Address: {ethereumContractAddress} RoundId: {roundId} report dose not exist");
+            _logger.LogInformation("Address: {Address} RoundId: {RoundId} report dose not exist",ethereumContractAddress,roundId);
             return string.Empty;
 
         }

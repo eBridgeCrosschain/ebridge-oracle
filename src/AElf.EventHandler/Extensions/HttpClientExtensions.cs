@@ -40,14 +40,17 @@ namespace AElf.EventHandler
                                 : "HTTP-" + (int) responseMessage.Result.StatusCode + ", ";
 
                             logger?.LogWarning(
-                                $"{retryCount}. HTTP request attempt failed to {url} with an error: {httpErrorCode}{responseMessage.Exception.Message}. " +
-                                $"Waiting {timeSpan.TotalSeconds} secs for the next try...");
+                                "{Count}. HTTP request attempt failed to {Url} with an error: {HttpErrorCode}{Message}. " +
+                                "Waiting {TotalSeconds} secs for the next try...", retryCount, url, httpErrorCode,
+                                responseMessage.Exception.Message, timeSpan.TotalSeconds);
                         }
                         else if (responseMessage.Result != null)
                         {
                             logger?.LogWarning(
-                                $"{retryCount}. HTTP request attempt failed to {url} with an error: {(int) responseMessage.Result.StatusCode}-{responseMessage.Result.ReasonPhrase}. " +
-                                $"Waiting {timeSpan.TotalSeconds} secs for the next try...");
+                                "{Count}. HTTP request attempt failed to {Url} with an error: {Code}-{Message}. " +
+                                "Waiting {TotalSeconds} secs for the next try...", retryCount, url,
+                                (int) responseMessage.Result.StatusCode, responseMessage.Result.ReasonPhrase,
+                                timeSpan.TotalSeconds);
                         }
                     })
                 .ExecuteAsync(async () => await httpClient.GetAsync(url, cancellationToken));

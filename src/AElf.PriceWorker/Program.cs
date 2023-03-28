@@ -32,7 +32,7 @@ namespace AElf.PriceWorker
 
             try
             {
-                Log.Information("Starting AElf.PriceWorker.");
+                Log.Information("Starting AElf.PriceWorker");
                 await CreateHostBuilder(args).RunConsoleAsync();
                 return 0;
             }

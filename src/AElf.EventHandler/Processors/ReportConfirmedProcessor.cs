@@ -62,7 +62,7 @@ public class ReportConfirmedProcessor : IReportConfirmedProcessor,ITransientDepe
                     Token = ethereumContractAddress,
                     RoundId = roundId
                 });
-                _logger.LogInformation($"Confirm raw report:{report.Value}");
+                _logger.LogInformation("Confirm raw report:{Report}",report.Value);
                 var signatureRecoverableInfos =
                     await _signaturesRecoverableInfoProvider.GetSignatureAsync(chainId,
                         ethereumContractAddress, roundId);
@@ -86,24 +86,8 @@ public class ReportConfirmedProcessor : IReportConfirmedProcessor,ITransientDepe
                     TransferToEthereumParameter(ethereumSwapId, report.Value, signatureRecoverableInfos);
 
                 _logger.LogInformation(
-                    $"Try to transmit data, TargetChainId: {reportQueryInfo.TargetChainId} Address: {ethereumContractAddress}  RoundId: {reportQueryInfo.RoundId}");
-               
-                for (var i = 0; i< rs.Length;i++)
-                {
-                    _logger.LogInformation(
-                        $"From chainId:{chainId}" +
-                        $"TargetContractAddress:{ethereumContractAddress}" +
-                        $"TargetChainId:{reportQueryInfo.TargetChainId}" +
-                        $"Report:{reportBytes.ToHex()}" +
-                        $"Rs[{i}]:{rs[i].ToHex()}" +
-                        $"Ss[{i}]:{ss[i].ToHex()}" +
-                        $"RawVs:{vs.ToHex()}" +
-                        $"SwapHashId:{swapHashId.ToHex()}" +
-                        $"BlockHash:{reportQueryInfo.BlockHash}" +
-                        $"BlockHeight:{reportQueryInfo.BlockHeight}"
-                    );
-                }
-                
+                    "Try to transmit data, TargetChainId: {ChainId} Address: {Address}  RoundId: {RoundId}",reportQueryInfo.TargetChainId,ethereumContractAddress,reportQueryInfo.RoundId);
+
                 await _transmitTransactionProvider.EnqueueAsync(new SendTransmitArgs
                 {
                     ChainId = chainId,

@@ -64,9 +64,9 @@ public class PriceSyncWorker : AsyncPeriodicBackgroundWorkerBase
         foreach (var item in _priceSyncOptions.TargetChains)
         {
             await _bridgeService.SetGasPriceAsync(item, setGasPriceInput);
-            Logger.LogDebug($"SetGasPrice success, ChainId: {item}.");
+            Logger.LogDebug("SetGasPrice success, ChainId: {Item}",item);
             await _bridgeService.SetPriceRatioAsync(item, setPriceRatioInput);
-            Logger.LogDebug($"SetPriceRatio success, ChainId: {item}.");
+            Logger.LogDebug("SetPriceRatio success, ChainId: {Item}",item);
         }
     }
 }

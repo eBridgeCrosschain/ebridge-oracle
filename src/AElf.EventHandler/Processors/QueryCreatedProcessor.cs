@@ -68,7 +68,7 @@ internal class QueryCreatedProcessor : IQueryCreatedProcessor,ITransientDependen
             }
         
             var salt = _saltProvider.GetSalt(chainId, queryId);
-            _logger.LogInformation($"Queried data: {data}, salt: {salt}");
+            _logger.LogInformation("Queried data: {Data}, salt: {Salt}",data,salt);
             var commitInput = new CommitInput
             {
                 QueryId = queryId,
@@ -76,9 +76,9 @@ internal class QueryCreatedProcessor : IQueryCreatedProcessor,ITransientDependen
                     HashHelper.ComputeFrom(data),
                     HashHelper.ConcatAndCompute(salt, HashHelper.ComputeFrom(_bridgeOptions.AccountAddress)))
             };
-            _logger.LogInformation($"Sending Commit tx with input: {commitInput}");
+            _logger.LogInformation("Sending Commit tx with input: {Input}",commitInput);
             var transactionResult = await _oracleService.CommitAsync(chainId, commitInput);
-            _logger.LogInformation($"[Commit] Transaction id {transactionResult.TransactionResult.TransactionId}");
+            _logger.LogInformation("[Commit] Transaction id {Id}",transactionResult.TransactionResult.TransactionId);
         }
     }
 }
