@@ -35,7 +35,6 @@ public class TransmitEventHandler :
         IOptionsSnapshot<RetryTransmitInfoOptions> retryTransmitInfoOptions,
         IBridgeOutService bridgeOutService,
         IDistributedEventBus distributedEventBus,
-        IDistributedCacheSerializer serializer,
         IObjectMapper<EventHandlerAppModule> objectMapper,
         ITransmitTransactionProvider transmitTransactionProvider)
     {
@@ -53,7 +52,8 @@ public class TransmitEventHandler :
         long lib = 100;
         if (eventData.BlockHeight > lib)
         {
-            throw new AbpException("Current transaction block height is higher than lib.");
+            throw new AbpException(
+                $"Current transaction block height is higher than lib.SwapId:{eventData.SwapHashId}");
         }
 
         if (eventData.LastSendTransmitTime != null)
@@ -62,7 +62,8 @@ public class TransmitEventHandler :
                 eventData.LastSendTransmitTime.Value.AddMinutes(_retryTransmitInfoOptions.RetryTransmitTimePeriod) >
                 DateTime.UtcNow)
             {
-                throw new AbpException("Insufficient time interval since the last transmit was sent.");
+                throw new AbpException(
+                    $"Insufficient time interval since the last transmit was sent.SwapId:{eventData.SwapHashId}");
             }
         }
 
@@ -72,11 +73,7 @@ public class TransmitEventHandler :
         {
             if (eventData.SendTimes > _retryTransmitInfoOptions.MaxSendTransmitTimes)
             {
-                //redis
-                eventData.SendTimes = 0;
-                eventData.Time = DateTime.UtcNow;
-                eventData.LastSendTransmitTime = null;
-                await _transmitTransactionProvider.PushFailedTransmitAsync(eventData);
+                PushFailedTransaction(eventData);
             }
             else
             {
@@ -89,7 +86,8 @@ public class TransmitEventHandler :
                         eventData.RawVs);
                     if (string.IsNullOrWhiteSpace(sendResult))
                     {
-                        Logger.LogError("Failed to transmit.");
+                        Logger.LogError("Failed to transmit,chainId:{Chain},swapId:{Id}", eventData.ChainId,
+                            eventData.SwapHashId);
                         eventData.LastSendTransmitTime = DateTime.UtcNow;
                         await _distributedEventBus.PublishAsync(eventData);
                     }
@@ -99,16 +97,27 @@ public class TransmitEventHandler :
                         await _distributedEventBus.PublishAsync(
                             _objectMapper.Map<TransmitEto, TransmitCheckEto>(eventData));
                         Logger.LogInformation(
-                            $"Send Transmit transaction. TxId: {sendResult}, Report: {eventData.Report.ToHex()}");
+                            "Send Transmit transaction. TxId: {Result}, Report: {Report}", sendResult,
+                            eventData.Report.ToHex());
                     }
                 }
                 catch (Exception e)
                 {
-                    Logger.LogError($"Send Transmit transaction Failed. Message: {e.Message}", e);
+                    Logger.LogError("Send Transmit transaction Failed,chainId:{Chain},swapId:{Id}. Message: {Message}",
+                        eventData.ChainId,eventData.SwapHashId, e);
                     eventData.LastSendTransmitTime = DateTime.UtcNow;
                     await _distributedEventBus.PublishAsync(eventData);
                 }
             }
         }
+    }
+
+    private async void PushFailedTransaction(TransmitEto eventData)
+    {
+        //redis
+        eventData.SendTimes = 0;
+        eventData.Time = DateTime.UtcNow;
+        eventData.LastSendTransmitTime = null;
+        await _transmitTransactionProvider.PushFailedTransmitAsync(eventData);
     }
 }

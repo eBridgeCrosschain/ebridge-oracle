@@ -48,7 +48,8 @@ public class TransmitCheckEventHandler :
                 eventData.LastSendTransmitCheckTime.Value.AddMinutes(_retryTransmitInfoOptions
                     .RetryTransmitCheckTimePeriod) > DateTime.UtcNow)
             {
-                throw new AbpException("Insufficient time interval.");
+                throw new AbpException(
+                    $"Insufficient time interval.ChainId:{eventData.ChainId},Target Chain: {eventData.TargetChainId},swapId:{eventData.SwapHashId}");
             }
         }
 
@@ -56,7 +57,9 @@ public class TransmitCheckEventHandler :
         if (eventData.QueryTimes > _retryTransmitInfoOptions.MaxQueryTransmitTimes)
         {
             Logger.LogDebug(
-                $"Transmit transaction query failed after retry {_retryTransmitInfoOptions.MaxQueryTransmitTimes} times. Chain: {eventData.TargetChainId},  TxId: {eventData.TransactionId}");
+                "Transmit transaction query failed after retry {Count} times. Chain id:{FromId},Target Chain: {Id}, TxId: {TxId}",
+                _retryTransmitInfoOptions.MaxQueryTransmitTimes, eventData.ChainId, eventData.TargetChainId,
+                eventData.TransactionId);
             PushFailedTransmitAsync(eventData);
         }
         else
@@ -68,7 +71,8 @@ public class TransmitCheckEventHandler :
                 if (receipt == null || receipt.Status == null || receipt.Status.Value != 1)
                 {
                     Logger.LogDebug(
-                        $"Transmit transaction query failed. Chain: {eventData.TargetChainId},  TxId: {eventData.TransactionId}");
+                        "Transmit transaction query failed. Chain: {Id}, Target Chain: {TargetId}, TxId: {TxId}",
+                        eventData.ChainId, eventData.TargetChainId, eventData.TransactionId);
                     eventData.LastSendTransmitCheckTime = DateTime.UtcNow;
                     await _distributedEventBus.PublishAsync(eventData);
                 }
@@ -78,25 +82,30 @@ public class TransmitCheckEventHandler :
                     if (receipt.BlockNumber.ToLong() >=
                         currentHeight - _blockConfirmationOptions.ConfirmationCount[eventData.TargetChainId])
                     {
-                        throw new AbpException("Block is not confirmed.");
+                        throw new AbpException(
+                            $"Block is not confirmed.FromChainId:{eventData.ChainId},TargetChainId:{eventData.TargetChainId},SwapId:{eventData.SwapHashId},CurrentHeight:{currentHeight},BlockNumber:{receipt.BlockNumber}");
                     }
 
                     var block = await _nethereumService.GetBlockByNumberAsync(ethAlias, receipt.BlockNumber);
                     if (block.BlockHash != receipt.BlockHash)
                     {
                         Logger.LogError(
-                            $"Transmit transaction forked. Chain: {eventData.TargetChainId},  TxId: {eventData.TransactionId}");
+                            "Transmit transaction forked.From chain:{FromId},Target Chain: {Id},TxId: {TxId}",
+                            eventData.ChainId, eventData.TargetChainId,
+                            eventData.TransactionId);
                         PushFailedTransmitAsync(eventData);
                     }
                     else
                     {
-                        Logger.LogInformation($"Transmit transaction finished. TxId: {eventData.TransactionId}");
+                        Logger.LogInformation("Transmit transaction finished. TxId: {Id}", eventData.TransactionId);
                     }
                 }
             }
             catch (Exception e)
             {
-                Logger.LogError($"Send Transmit check transaction Failed. Message: {e.Message}", e);
+                Logger.LogError(
+                    "Send Transmit check transaction Failed,From chain:{FromId},Target Chain: {ChainId},Swap id:{SwapId},TxId:{Id}. Message: {Message}",
+                    eventData.ChainId, eventData.TargetChainId, eventData.SwapHashId, eventData.TransactionId, e);
                 eventData.LastSendTransmitCheckTime = DateTime.UtcNow;
                 await _distributedEventBus.PublishAsync(eventData);
             }
