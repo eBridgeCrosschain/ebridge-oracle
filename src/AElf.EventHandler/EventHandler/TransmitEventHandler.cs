@@ -26,6 +26,7 @@ public class TransmitEventHandler :
     private readonly IDistributedEventBus _distributedEventBus;
     private readonly IObjectMapper<EventHandlerAppModule> _objectMapper;
     private readonly ITransmitTransactionProvider _transmitTransactionProvider;
+    private readonly IChainProvider _chainProvider;
 
     public ILogger<TransmitEventHandler> Logger { get; set; }
 
@@ -36,21 +37,23 @@ public class TransmitEventHandler :
         IBridgeOutService bridgeOutService,
         IDistributedEventBus distributedEventBus,
         IObjectMapper<EventHandlerAppModule> objectMapper,
-        ITransmitTransactionProvider transmitTransactionProvider)
+        ITransmitTransactionProvider transmitTransactionProvider, 
+        IChainProvider chainProvider)
     {
         _aelfClientService = aelfClientService;
         _bridgeOutService = bridgeOutService;
         _distributedEventBus = distributedEventBus;
         _objectMapper = objectMapper;
         _transmitTransactionProvider = transmitTransactionProvider;
+        _chainProvider = chainProvider;
         _aelfChainAliasOption = aelfChainAliasOption.Value;
         _retryTransmitInfoOptions = retryTransmitInfoOptions.Value;
     }
 
     public async Task HandleEventAsync(TransmitEto eventData)
     {
-        long lib = 100;
-        if (eventData.BlockHeight > lib)
+        var lib = await _chainProvider.GetLastIrreversibleBlock(eventData.ChainId);
+        if (eventData.BlockHeight > lib.BlockHeight)
         {
             throw new AbpException(
                 $"Current transaction block height is higher than lib.SwapId:{eventData.SwapHashId}");

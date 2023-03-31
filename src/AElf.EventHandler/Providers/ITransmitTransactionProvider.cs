@@ -57,8 +57,10 @@ public class TransmitTransactionProvider : AbpRedisCache, ITransmitTransactionPr
 
         foreach (var item in list)
         {
-            await _distributedEventBus.PublishAsync(
-                _serializer.Deserialize<TransmitEto>(item));
+            var toPublish = _serializer.Deserialize<TransmitEto>(item);
+            Logger.LogInformation(
+                "Start to publish.chain id:{Item},swap id:{Id}", toPublish.ChainId,toPublish.SwapHashId);
+            await _distributedEventBus.PublishAsync(toPublish);
             await RedisDatabase.ListLeftPopAsync((RedisKey) TransmitFailedList);
         }
     }

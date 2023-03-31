@@ -4,11 +4,13 @@ using System.Threading.Tasks;
 using AElf.Client.Bridge;
 using AElf.Client.Report;
 using AElf.Contracts.Report;
+using AElf.EventHandler.Dto;
 using AElf.EventHandler.IndexerSync;
 using AElf.Types;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Volo.Abp.DependencyInjection;
+using Volo.Abp.EventBus.Distributed;
 
 namespace AElf.EventHandler;
 
@@ -21,25 +23,25 @@ public class ReportConfirmedProcessor : IReportConfirmedProcessor, ITransientDep
 {
     private readonly ILogger<ReportConfirmedProcessor> _logger;
     private readonly ISignatureRecoverableInfoProvider _signaturesRecoverableInfoProvider;
-    private readonly ITransmitTransactionProvider _transmitTransactionProvider;
     private readonly BridgeOptions _bridgeOptions;
     private readonly IReportService _reportService;
     private readonly IBridgeService _bridgeService;
     private readonly IChainProvider _chainProvider;
+    private readonly IDistributedEventBus _distributedEventBus;
 
     public ReportConfirmedProcessor(ILogger<ReportConfirmedProcessor> logger,
         ISignatureRecoverableInfoProvider signaturesRecoverableInfoProvider,
-        ITransmitTransactionProvider transmitTransactionProvider,
         IOptionsSnapshot<BridgeOptions> bridgeOptions, IReportService reportService,
-        IBridgeService bridgeService, IChainProvider chainProvider)
+        IBridgeService bridgeService, IChainProvider chainProvider, 
+        IDistributedEventBus distributedEventBus)
     {
         _logger = logger;
         _signaturesRecoverableInfoProvider = signaturesRecoverableInfoProvider;
-        _transmitTransactionProvider = transmitTransactionProvider;
         _bridgeOptions = bridgeOptions.Value;
         _reportService = reportService;
         _bridgeService = bridgeService;
         _chainProvider = chainProvider;
+        _distributedEventBus = distributedEventBus;
     }
 
     public async Task ProcessAsync(string aelfChainId, ReportInfoDto reportQueryInfo)
@@ -88,7 +90,7 @@ public class ReportConfirmedProcessor : IReportConfirmedProcessor, ITransientDep
             "Try to transmit data, TargetChainId: {ChainId} Address: {Address}  RoundId: {RoundId}",
             reportQueryInfo.TargetChainId, ethereumContractAddress, reportQueryInfo.RoundId);
 
-        await _transmitTransactionProvider.EnqueueAsync(new SendTransmitArgs
+        await _distributedEventBus.PublishAsync(new TransmitEto
         {
             ChainId = chainId,
             TargetContractAddress = ethereumContractAddress,
@@ -101,7 +103,6 @@ public class ReportConfirmedProcessor : IReportConfirmedProcessor, ITransientDep
             BlockHash = reportQueryInfo.BlockHash,
             BlockHeight = reportQueryInfo.BlockHeight
         });
-
 
         await _signaturesRecoverableInfoProvider.RemoveSignatureAsync(chainId,
             ethereumContractAddress, roundId);
