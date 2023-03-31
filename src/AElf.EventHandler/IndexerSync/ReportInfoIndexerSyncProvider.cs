@@ -54,7 +54,6 @@ public class ReportInfoIndexerSyncProvider : IndexerSyncProviderBase
             Query =
                 @"query($chainId:String,$startBlockHeight:Long!,$endBlockHeight:Long!){
             reportInfo(dto: {chainId:$chainId,startBlockHeight:$startBlockHeight,endBlockHeight:$endBlockHeight}){
-                data{
                     id,
                     chainId,
                     blockHash,
@@ -69,7 +68,6 @@ public class ReportInfoIndexerSyncProvider : IndexerSyncProviderBase
                     rawReport,
                     signature,
                     isAllNodeConfirmed                    
-                }
             }
         }",
             Variables = new

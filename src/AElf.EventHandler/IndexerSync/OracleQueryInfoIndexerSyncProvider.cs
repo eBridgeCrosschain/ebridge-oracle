@@ -55,7 +55,6 @@ public class OracleQueryInfoIndexerSyncProvider : IndexerSyncProviderBase
             Query =
                 @"query($chainId:String,$startBlockHeight:Long!,$endBlockHeight:Long!){
             oracleQueryInfo(dto: {chainId:$chainId,startBlockHeight:$startBlockHeight,endBlockHeight:$endBlockHeight}){
-                data{
                     id,
                     chainId,
                     blockHash,
@@ -68,7 +67,6 @@ public class OracleQueryInfoIndexerSyncProvider : IndexerSyncProviderBase
                         title,
                         options
                     }
-                }
             }
         }",
             Variables = new
