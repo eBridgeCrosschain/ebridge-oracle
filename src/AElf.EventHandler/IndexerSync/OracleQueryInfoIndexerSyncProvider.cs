@@ -62,7 +62,7 @@ public class OracleQueryInfoIndexerSyncProvider : IndexerSyncProviderBase
                     blockTime,
                     queryId,
                     designatedNodeList,
-                    oracleStep,
+                    step,
                     queryInfo{
                         title,
                         options
