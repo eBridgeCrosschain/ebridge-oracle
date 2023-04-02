@@ -41,9 +41,9 @@ public class OracleQueryInfoIndexerSyncProvider : IndexerSyncProviderBase
     {
         switch (data.Step)
         {
-            case OracleStep.QueryCreated:
+            case OracleStep.QUERY_CREATED:
                 break;
-            case OracleStep.SufficientCommitmentsCollected:
+            case OracleStep.SUFFICIENT_COMMITMENTS_COLLECTED:
                 break;
         }
     }
@@ -100,9 +100,9 @@ public class QueryInfoDto
 
 public enum OracleStep
 {
-    QueryCreated,
-    Committed,
-    SufficientCommitmentsCollected,
-    CommitmentRevealed,
-    QueryCompleted
+    QUERY_CREATED,
+    COMMITTED,
+    SUFFICIENT_COMMITMENTS_COLLECTED,
+    COMMITMENT_REVEALED,
+    QUERY_COMPLETED
 }
