@@ -26,6 +26,7 @@ public class ReportInfoIndexerSyncProvider : IndexerSyncProviderBase
         var data = await QueryDataAsync<ReportInfoResponse>(GetRequest(chainId, startHeight, endHeight));
         if (data == null || data.ReportInfo.Count == 0)
         {
+            await SetSyncHeightAsync(chainId, endHeight);
             return;
         }
 

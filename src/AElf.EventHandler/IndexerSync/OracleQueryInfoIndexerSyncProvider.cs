@@ -27,6 +27,7 @@ public class OracleQueryInfoIndexerSyncProvider : IndexerSyncProviderBase
         var data = await QueryDataAsync<OracleQueryInfoResponse>(GetRequest(chainId, startHeight, endHeight));
         if (data == null || data.OracleQueryInfo.Count == 0)
         {
+            await SetSyncHeightAsync(chainId, endHeight);
             return;
         }
 

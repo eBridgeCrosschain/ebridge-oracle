@@ -73,6 +73,7 @@ public abstract class IndexerSyncProviderBase : IIndexerSyncProvider, ITransient
 
     protected async Task SetSyncHeightAsync(string chainId, long height)
     {
+        Logger.LogInformation("Set {Type} sync height: {Height}", SyncType, height);
         await _distributedCache.SetAsync(GetSyncHeightKey(chainId), height.ToString());
     }
 
