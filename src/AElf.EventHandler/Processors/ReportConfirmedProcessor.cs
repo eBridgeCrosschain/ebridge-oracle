@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -46,6 +47,11 @@ public class ReportConfirmedProcessor : IReportConfirmedProcessor, ITransientDep
 
     public async Task ProcessAsync(string aelfChainId, ReportInfoDto reportQueryInfo)
     {
+        if (reportQueryInfo.Signature.IsNullOrWhiteSpace())
+        {
+            return;
+        }
+
         var chainId = _chainProvider.GetChainId(aelfChainId);
         var targetChainId = reportQueryInfo.TargetChainId;
         var ethereumContractAddress = reportQueryInfo.Token;
