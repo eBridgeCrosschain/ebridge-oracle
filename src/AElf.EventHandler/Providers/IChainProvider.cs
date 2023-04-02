@@ -11,7 +11,7 @@ public interface IChainProvider
 {
     string GetChainId(string aelfChainId);
     Dictionary<string, string> GetAllChainIds();
-    Task SetLastIrreversibleBlock(string chainId, Hash blockHash, long blockHeight);
+    Task SetLastIrreversibleBlock(string chainId, long blockHeight);
     Task<BlockIndex> GetLastIrreversibleBlock(string chainId);
 }
 
@@ -37,11 +37,10 @@ public class ChainProvider : IChainProvider, ITransientDependency
         return _chainIdMappingOptions.Mapping;
     }
 
-    public async Task SetLastIrreversibleBlock(string chainId, Hash blockHash, long blockHeight)
+    public async Task SetLastIrreversibleBlock(string chainId, long blockHeight)
     {
         await _distributedCache.SetAsync(GetLibCacheKey(chainId), new BlockIndex
         {
-            BlockHash = blockHash,
             BlockHeight = blockHeight
         });
     }
@@ -59,6 +58,5 @@ public class ChainProvider : IChainProvider, ITransientDependency
 
 public class BlockIndex
 {
-    public Hash BlockHash { get; set; }
     public long BlockHeight { get; set; }
 }
