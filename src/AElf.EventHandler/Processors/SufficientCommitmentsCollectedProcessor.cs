@@ -40,11 +40,11 @@ public class SufficientCommitmentsCollectedProcessor :ISufficientCommitmentsColl
         var data = await _dataProvider.GetDataAsync(queryId);
         if (string.IsNullOrEmpty(data))
         {
-            _logger.LogError("Failed to reveal data for query {0}.",oracleQueryInfo.QueryId);
+            _logger.LogError("Failed to reveal data for query {Id}",oracleQueryInfo.QueryId);
             return;
         }
         
-        _logger.LogInformation("Get data for revealing: {0}",data);
+        _logger.LogInformation("Get data for revealing: {Data}",data);
         var revealInput = new RevealInput
         {
             QueryId = queryId,
@@ -53,6 +53,6 @@ public class SufficientCommitmentsCollectedProcessor :ISufficientCommitmentsColl
         };
         _logger.LogInformation("Sending Reveal tx with input: {Input}",revealInput);
         var transaction = await _oracleService.RevealAsync(chainId,revealInput);
-        _logger.LogInformation("[Reveal] Transaction id :{Id}",transaction.TransactionResult.TransactionId);
+        _logger.LogInformation("[Reveal] Transaction id :{Id}",transaction.TransactionResult.TransactionId.ToHex());
     }
 }

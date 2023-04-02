@@ -219,6 +219,6 @@ public class ReceiptProvider : IReceiptProvider, ITransientDependency
         var sendTxResult = await _oracleService.QueryAsync(chainId, queryInput);
         _logger.LogInformation(
             "Query transaction id : {Id}.Next receipt index should start with: {Index}",
-            sendTxResult.TransactionResult.TransactionId, _latestQueriedReceiptCountProvider.Get(swapId));
+            sendTxResult.TransactionResult.TransactionId.ToHex(), _latestQueriedReceiptCountProvider.Get(swapId));
     }
 }

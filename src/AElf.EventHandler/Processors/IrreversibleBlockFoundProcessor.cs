@@ -34,7 +34,7 @@ public class IrreversibleBlockFoundProcessor : IIrreversibleBlockFoundProcessor,
     
     public async Task ProcessAsync(string aelfChainId, long libHeight)
     {
-        Logger.LogInformation("Irreversible block found, chain id: {0}, height: {1}", aelfChainId, libHeight);
+        Logger.LogInformation("Irreversible block found, chain id: {Id}, height: {Height}", aelfChainId, libHeight);
         var chainId = _chainProvider.GetChainId(aelfChainId);
         var clientAlias = _chainAliasOptions.Mapping[chainId];
         var block = await _aelfClientService.GetBlockByHeightAsync(clientAlias,libHeight);

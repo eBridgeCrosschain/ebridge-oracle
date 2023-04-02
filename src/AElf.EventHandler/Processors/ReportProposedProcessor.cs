@@ -53,6 +53,6 @@ public class ReportProposedProcessor : IReportProposedProcessor,ITransientDepend
             Signature = SignHelper
                 .GetSignature(reportQueryInfo.RawReport, privateKey).RecoverInfo
         });
-        _logger.LogInformation("[ConfirmReport] Transaction id :{Id}",sendTxResult.TransactionResult.TransactionId);
+        _logger.LogInformation("[ConfirmReport] Transaction id :{Id}",sendTxResult.TransactionResult.TransactionId.ToHex());
     }
 }

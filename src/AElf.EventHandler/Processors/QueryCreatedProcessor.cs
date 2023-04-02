@@ -78,7 +78,7 @@ internal class QueryCreatedProcessor : IQueryCreatedProcessor,ITransientDependen
             };
             _logger.LogInformation("Sending Commit tx with input: {Input}",commitInput);
             var transactionResult = await _oracleService.CommitAsync(chainId, commitInput);
-            _logger.LogInformation("[Commit] Transaction id {Id}",transactionResult.TransactionResult.TransactionId);
+            _logger.LogInformation("[Commit] Transaction id {Id}",transactionResult.TransactionResult.TransactionId.ToHex());
         }
     }
 }
