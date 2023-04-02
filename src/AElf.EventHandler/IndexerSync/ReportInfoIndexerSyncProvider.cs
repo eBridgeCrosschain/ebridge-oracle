@@ -10,10 +10,14 @@ namespace AElf.EventHandler.IndexerSync;
 
 public class ReportInfoIndexerSyncProvider : IndexerSyncProviderBase
 {
-
-    public ReportInfoIndexerSyncProvider(IGraphQLClient graphQlClient, IDistributedCache<string> distributedCache) : base(
+    private readonly IReportProposedProcessor _reportProposedProcessor;
+    private readonly IReportConfirmedProcessor _reportConfirmedProcessor;
+    
+    public ReportInfoIndexerSyncProvider(IGraphQLClient graphQlClient, IDistributedCache<string> distributedCache, IReportProposedProcessor reportProposedProcessor, IReportConfirmedProcessor reportConfirmedProcessor) : base(
         graphQlClient,distributedCache)
     {
+        _reportProposedProcessor = reportProposedProcessor;
+        _reportConfirmedProcessor = reportConfirmedProcessor;
     }
 
     protected override string SyncType { get; } = "ReportInfo";
@@ -58,8 +62,10 @@ public class ReportInfoIndexerSyncProvider : IndexerSyncProviderBase
         switch (report.Step)
         {
             case ReportStep.Proposed:
+                await _reportProposedProcessor.ProcessAsync(report.ChainId, report);
                 break;
             case ReportStep.Confirmed:
+                await _reportConfirmedProcessor.ProcessAsync(report.ChainId, report);
                 break;
         }
     }

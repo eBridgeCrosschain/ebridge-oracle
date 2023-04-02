@@ -10,11 +10,15 @@ namespace AElf.EventHandler.IndexerSync;
 
 public class OracleQueryInfoIndexerSyncProvider : IndexerSyncProviderBase
 {
-
-    public OracleQueryInfoIndexerSyncProvider(IGraphQLClient graphQlClient, IDistributedCache<string> distributedCache)
+    private readonly IQueryCreatedProcessor _queryCreatedProcessor;
+    private readonly ISufficientCommitmentsCollectedProcessor _sufficientCommitmentsCollectedProcessor;
+    
+    public OracleQueryInfoIndexerSyncProvider(IGraphQLClient graphQlClient, IDistributedCache<string> distributedCache, IQueryCreatedProcessor queryCreatedProcessor, ISufficientCommitmentsCollectedProcessor sufficientCommitmentsCollectedProcessor)
         : base(
             graphQlClient, distributedCache)
     {
+        _queryCreatedProcessor = queryCreatedProcessor;
+        _sufficientCommitmentsCollectedProcessor = sufficientCommitmentsCollectedProcessor;
     }
 
     protected override string SyncType { get; } = "OracleQueryInfo";
@@ -59,8 +63,10 @@ public class OracleQueryInfoIndexerSyncProvider : IndexerSyncProviderBase
         switch (data.Step)
         {
             case OracleStep.QUERY_CREATED:
+                await _queryCreatedProcessor.ProcessAsync(data.ChainId, data);
                 break;
             case OracleStep.SUFFICIENT_COMMITMENTS_COLLECTED:
+                await _sufficientCommitmentsCollectedProcessor.ProcessAsync(data.ChainId, data);
                 break;
         }
     }
