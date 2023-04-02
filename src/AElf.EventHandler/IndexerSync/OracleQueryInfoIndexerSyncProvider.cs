@@ -3,17 +3,22 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using GraphQL;
 using GraphQL.Client.Abstractions;
+using Microsoft.Extensions.Logging;
 using Volo.Abp.Caching;
 
 namespace AElf.EventHandler.IndexerSync;
 
 public class OracleQueryInfoIndexerSyncProvider : IndexerSyncProviderBase
 {
-
-    public OracleQueryInfoIndexerSyncProvider(IGraphQLClient graphQlClient, IDistributedCache<string> distributedCache)
+    private readonly IQueryCreatedProcessor _queryCreatedProcessor;
+    private readonly ISufficientCommitmentsCollectedProcessor _sufficientCommitmentsCollectedProcessor;
+    
+    public OracleQueryInfoIndexerSyncProvider(IGraphQLClient graphQlClient, IDistributedCache<string> distributedCache, IQueryCreatedProcessor queryCreatedProcessor, ISufficientCommitmentsCollectedProcessor sufficientCommitmentsCollectedProcessor)
         : base(
             graphQlClient, distributedCache)
     {
+        _queryCreatedProcessor = queryCreatedProcessor;
+        _sufficientCommitmentsCollectedProcessor = sufficientCommitmentsCollectedProcessor;
     }
 
     protected override string SyncType { get; } = "OracleQueryInfo";
@@ -22,18 +27,34 @@ public class OracleQueryInfoIndexerSyncProvider : IndexerSyncProviderBase
     {
         var processedHeight = await GetSyncHeightAsync(chainId);
         var startHeight = processedHeight + 1;
-        var endHeight = await GetSyncEndHeightAsync(chainId, startHeight);
         
-        var data = await QueryDataAsync<OracleQueryInfoResponse>(GetRequest(chainId, startHeight, endHeight));
-        if (data == null || data.OracleQueryInfo.Count == 0)
-        {
-            return;
-        }
+        var currentIndexHeight = await GetIndexBlockHeightAsync(chainId);
+        var endHeight = GetSyncEndHeight(startHeight, currentIndexHeight);
 
-        foreach (var oracleQueryInfo in data.OracleQueryInfo)
+        while (true)
         {
-            await HandleDataAsync(oracleQueryInfo);
-            await SetSyncHeightAsync(chainId, oracleQueryInfo.BlockHeight);
+            var data = await QueryDataAsync<OracleQueryInfoResponse>(GetRequest(chainId, startHeight, endHeight));
+            if (data == null || data.OracleQueryInfo.Count == 0)
+            {
+                await SetSyncHeightAsync(chainId, endHeight);
+            }
+            else
+            {
+                foreach (var oracleQueryInfo in data.OracleQueryInfo)
+                {
+                    await HandleDataAsync(oracleQueryInfo);
+                    await SetSyncHeightAsync(chainId, oracleQueryInfo.BlockHeight);
+                    Logger.LogDebug("Set {Type} sync height: {Height}", SyncType, oracleQueryInfo.BlockHeight);
+                }
+            }
+
+            if (endHeight >= currentIndexHeight)
+            {
+                break;
+            }
+            
+            startHeight = endHeight + 1;
+            endHeight = GetSyncEndHeight(startHeight, currentIndexHeight);
         }
     }
 
@@ -41,9 +62,11 @@ public class OracleQueryInfoIndexerSyncProvider : IndexerSyncProviderBase
     {
         switch (data.Step)
         {
-            case OracleStep.QueryCreated:
+            case OracleStep.QUERY_CREATED:
+                await _queryCreatedProcessor.ProcessAsync(data.ChainId, data);
                 break;
-            case OracleStep.SufficientCommitmentsCollected:
+            case OracleStep.SUFFICIENT_COMMITMENTS_COLLECTED:
+                await _sufficientCommitmentsCollectedProcessor.ProcessAsync(data.ChainId, data);
                 break;
         }
     }
@@ -55,7 +78,6 @@ public class OracleQueryInfoIndexerSyncProvider : IndexerSyncProviderBase
             Query =
                 @"query($chainId:String,$startBlockHeight:Long!,$endBlockHeight:Long!){
             oracleQueryInfo(dto: {chainId:$chainId,startBlockHeight:$startBlockHeight,endBlockHeight:$endBlockHeight}){
-                data{
                     id,
                     chainId,
                     blockHash,
@@ -63,12 +85,11 @@ public class OracleQueryInfoIndexerSyncProvider : IndexerSyncProviderBase
                     blockTime,
                     queryId,
                     designatedNodeList,
-                    oracleStep,
+                    step,
                     queryInfo{
                         title,
                         options
                     }
-                }
             }
         }",
             Variables = new
@@ -102,9 +123,9 @@ public class QueryInfoDto
 
 public enum OracleStep
 {
-    QueryCreated,
-    Committed,
-    SufficientCommitmentsCollected,
-    CommitmentRevealed,
-    QueryCompleted
+    QUERY_CREATED,
+    COMMITTED,
+    SUFFICIENT_COMMITMENTS_COLLECTED,
+    COMMITMENT_REVEALED,
+    QUERY_COMPLETED
 }

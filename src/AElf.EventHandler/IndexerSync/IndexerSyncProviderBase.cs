@@ -18,7 +18,7 @@ public abstract class IndexerSyncProviderBase : IIndexerSyncProvider, ITransient
 
     public ILogger<IndexerSyncProviderBase> Logger { get; set; }
 
-    private const int MaxRequestCount = 1000;
+    protected const int MaxRequestCount = 1000;
 
     protected IndexerSyncProviderBase(IGraphQLClient graphQlClient, IDistributedCache<string> distributedCache)
     {
@@ -27,11 +27,16 @@ public abstract class IndexerSyncProviderBase : IIndexerSyncProvider, ITransient
         Logger = NullLogger<IndexerSyncProviderBase>.Instance;
     }
 
-    protected async Task<long> GetSyncEndHeightAsync(string chainId, long startHeight)
+    // protected async Task<long> GetSyncEndHeightAsync(string chainId, long startHeight)
+    // {
+    //     var currentIndexHeight = await GetIndexBlockHeightAsync(chainId);
+    //     return Math.Min(startHeight + MaxRequestCount - 1, currentIndexHeight);
+    // }
+    protected long GetSyncEndHeight(long startHeight, long currentIndexHeight)
     {
-        var currentIndexHeight = await GetIndexBlockHeightAsync(chainId);
         return Math.Min(startHeight + MaxRequestCount - 1, currentIndexHeight);
     }
+    
 
     protected async Task<T> QueryDataAsync<T>(GraphQLRequest request)
     {
@@ -43,7 +48,7 @@ public abstract class IndexerSyncProviderBase : IIndexerSyncProvider, ITransient
 
         Logger.LogError("Query indexer failed. errors: {Errors}",
             string.Join(",", data.Errors.Select(e => e.Message).ToList()));
-        return default;
+        throw new Exception("Query indexer failed.");
     }
 
     protected async Task<long> GetIndexBlockHeightAsync(string chainId)

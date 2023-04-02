@@ -3,16 +3,21 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using GraphQL;
 using GraphQL.Client.Abstractions;
+using Microsoft.Extensions.Logging;
 using Volo.Abp.Caching;
 
 namespace AElf.EventHandler.IndexerSync;
 
 public class ReportInfoIndexerSyncProvider : IndexerSyncProviderBase
 {
-
-    public ReportInfoIndexerSyncProvider(IGraphQLClient graphQlClient, IDistributedCache<string> distributedCache) : base(
+    private readonly IReportProposedProcessor _reportProposedProcessor;
+    private readonly IReportConfirmedProcessor _reportConfirmedProcessor;
+    
+    public ReportInfoIndexerSyncProvider(IGraphQLClient graphQlClient, IDistributedCache<string> distributedCache, IReportProposedProcessor reportProposedProcessor, IReportConfirmedProcessor reportConfirmedProcessor) : base(
         graphQlClient,distributedCache)
     {
+        _reportProposedProcessor = reportProposedProcessor;
+        _reportConfirmedProcessor = reportConfirmedProcessor;
     }
 
     protected override string SyncType { get; } = "ReportInfo";
@@ -21,18 +26,34 @@ public class ReportInfoIndexerSyncProvider : IndexerSyncProviderBase
     {
         var processedHeight = await GetSyncHeightAsync(chainId);
         var startHeight = processedHeight + 1;
-        var endHeight = await GetSyncEndHeightAsync(chainId, startHeight);
         
-        var data = await QueryDataAsync<ReportInfoResponse>(GetRequest(chainId, startHeight, endHeight));
-        if (data == null || data.ReportInfo.Count == 0)
-        {
-            return;
-        }
+        var currentIndexHeight = await GetIndexBlockHeightAsync(chainId);
+        var endHeight = GetSyncEndHeight(startHeight, currentIndexHeight);
 
-        foreach (var oracleQueryInfo in data.ReportInfo)
+        while (true)
         {
-            await HandleDataAsync(oracleQueryInfo);
-            await SetSyncHeightAsync(chainId, oracleQueryInfo.BlockHeight);
+            var data = await QueryDataAsync<ReportInfoResponse>(GetRequest(chainId, startHeight, endHeight));
+            if (data == null || data.ReportInfo.Count == 0)
+            {
+                await SetSyncHeightAsync(chainId, endHeight);
+            }
+            else
+            {
+                foreach (var oracleQueryInfo in data.ReportInfo)
+                {
+                    await HandleDataAsync(oracleQueryInfo);
+                    await SetSyncHeightAsync(chainId, oracleQueryInfo.BlockHeight);
+                    Logger.LogDebug("Set {Type} sync height: {Height}", SyncType, oracleQueryInfo.BlockHeight);
+                }
+            }
+            
+            if (endHeight >= currentIndexHeight)
+            {
+                break;
+            }
+            
+            startHeight = endHeight + 1;
+            endHeight = GetSyncEndHeight(startHeight, currentIndexHeight);
         }
     }
 
@@ -41,8 +62,10 @@ public class ReportInfoIndexerSyncProvider : IndexerSyncProviderBase
         switch (report.Step)
         {
             case ReportStep.Proposed:
+                await _reportProposedProcessor.ProcessAsync(report.ChainId, report);
                 break;
             case ReportStep.Confirmed:
+                await _reportConfirmedProcessor.ProcessAsync(report.ChainId, report);
                 break;
         }
     }
@@ -54,7 +77,6 @@ public class ReportInfoIndexerSyncProvider : IndexerSyncProviderBase
             Query =
                 @"query($chainId:String,$startBlockHeight:Long!,$endBlockHeight:Long!){
             reportInfo(dto: {chainId:$chainId,startBlockHeight:$startBlockHeight,endBlockHeight:$endBlockHeight}){
-                data{
                     id,
                     chainId,
                     blockHash,
@@ -69,7 +91,6 @@ public class ReportInfoIndexerSyncProvider : IndexerSyncProviderBase
                     rawReport,
                     signature,
                     isAllNodeConfirmed                    
-                }
             }
         }",
             Variables = new
