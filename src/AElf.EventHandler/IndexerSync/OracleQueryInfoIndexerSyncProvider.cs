@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using GraphQL;
 using GraphQL.Client.Abstractions;
+using Microsoft.Extensions.Logging;
 using Volo.Abp.Caching;
 
 namespace AElf.EventHandler.IndexerSync;
@@ -22,19 +23,34 @@ public class OracleQueryInfoIndexerSyncProvider : IndexerSyncProviderBase
     {
         var processedHeight = await GetSyncHeightAsync(chainId);
         var startHeight = processedHeight + 1;
-        var endHeight = await GetSyncEndHeightAsync(chainId, startHeight);
         
-        var data = await QueryDataAsync<OracleQueryInfoResponse>(GetRequest(chainId, startHeight, endHeight));
-        if (data == null || data.OracleQueryInfo.Count == 0)
-        {
-            await SetSyncHeightAsync(chainId, endHeight);
-            return;
-        }
+        var currentIndexHeight = await GetIndexBlockHeightAsync(chainId);
+        var endHeight = GetSyncEndHeight(startHeight, currentIndexHeight);
 
-        foreach (var oracleQueryInfo in data.OracleQueryInfo)
+        while (true)
         {
-            await HandleDataAsync(oracleQueryInfo);
-            await SetSyncHeightAsync(chainId, oracleQueryInfo.BlockHeight);
+            var data = await QueryDataAsync<OracleQueryInfoResponse>(GetRequest(chainId, startHeight, endHeight));
+            if (data == null || data.OracleQueryInfo.Count == 0)
+            {
+                await SetSyncHeightAsync(chainId, endHeight);
+            }
+            else
+            {
+                foreach (var oracleQueryInfo in data.OracleQueryInfo)
+                {
+                    await HandleDataAsync(oracleQueryInfo);
+                    await SetSyncHeightAsync(chainId, oracleQueryInfo.BlockHeight);
+                    Logger.LogDebug("Set {Type} sync height: {Height}", SyncType, oracleQueryInfo.BlockHeight);
+                }
+            }
+
+            if (endHeight >= currentIndexHeight)
+            {
+                break;
+            }
+            
+            startHeight = endHeight + 1;
+            endHeight = GetSyncEndHeight(startHeight, currentIndexHeight);
         }
     }
 
