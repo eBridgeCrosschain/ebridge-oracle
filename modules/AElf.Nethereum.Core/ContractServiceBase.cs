@@ -22,6 +22,7 @@ public abstract class ContractServiceBase
         var clientAlias = EthereumAElfChainAliasOptions.Value.Mapping[chainId];
         var accountAlias = EthereumClientConfigOptions.Value.AccountAlias;
         var client = NethereumClientProvider.GetClient(clientAlias, accountAlias);
+        client.TransactionManager.UseLegacyAsDefault = true;
         var contract = client.Eth.GetContract(GetAbi(), contractAddress);
         return contract.GetFunction(methodName);
     }

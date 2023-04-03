@@ -33,19 +33,16 @@ public class ReportInfoIndexerSyncProvider : IndexerSyncProviderBase
         while (true)
         {
             var data = await QueryDataAsync<ReportInfoResponse>(GetRequest(chainId, startHeight, endHeight));
-            if (data == null || data.ReportInfo.Count == 0)
-            {
-                await SetSyncHeightAsync(chainId, endHeight);
-            }
-            else
+            if (data != null && data.ReportInfo.Count > 0)
             {
                 foreach (var oracleQueryInfo in data.ReportInfo)
                 {
+                    Logger.LogDebug("Handle {Type}, sync height: {Height}", SyncType, oracleQueryInfo.BlockHeight);
                     await HandleDataAsync(oracleQueryInfo);
-                    await SetSyncHeightAsync(chainId, oracleQueryInfo.BlockHeight);
-                    Logger.LogDebug("Set {Type} sync height: {Height}", SyncType, oracleQueryInfo.BlockHeight);
                 }
             }
+            
+            await SetSyncHeightAsync(chainId, endHeight);
 
             if (IsSyncFinished(endHeight, currentIndexHeight))
             {
@@ -111,8 +108,6 @@ public class ReportInfoDto : GraphQLDto
     public long RoundId { get; set; }
     public string Token { get; set; }
     public string TargetChainId { get; set; }
-    public string ReceiptId { get; set; }
-    public string ReceiptHash { get; set; }
     public ReportStep Step { get; set; }
     public string RawReport { get; set; }
     public string Signature { get; set; }
