@@ -48,7 +48,7 @@ public class OracleQueryInfoIndexerSyncProvider : IndexerSyncProviderBase
                 }
             }
 
-            if (endHeight >= currentIndexHeight)
+            if (IsSyncFinished(endHeight, currentIndexHeight))
             {
                 break;
             }

@@ -67,6 +67,12 @@ public class ReportConfirmedProcessor : IReportConfirmedProcessor, ITransientDep
         var signatureRecoverableInfos =
             await _signaturesRecoverableInfoProvider.GetSignatureAsync(chainId,
                 ethereumContractAddress, roundId);
+        
+        if (signatureRecoverableInfos.Any(o => o.IsNullOrWhiteSpace()))
+        {
+            _logger.LogError("Wrong signature recoverable info: {}", reportQueryInfo.RoundId);
+            return;
+        }
 
         //GetSwapId
         var receiptId = (await _reportService.GetReportAsync(chainId, new GetReportInput

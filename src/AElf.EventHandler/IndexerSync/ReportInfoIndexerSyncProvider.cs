@@ -46,12 +46,12 @@ public class ReportInfoIndexerSyncProvider : IndexerSyncProviderBase
                     Logger.LogDebug("Set {Type} sync height: {Height}", SyncType, oracleQueryInfo.BlockHeight);
                 }
             }
-            
-            if (endHeight >= currentIndexHeight)
+
+            if (IsSyncFinished(endHeight, currentIndexHeight))
             {
                 break;
             }
-            
+
             startHeight = endHeight + 1;
             endHeight = GetSyncEndHeight(startHeight, currentIndexHeight);
         }

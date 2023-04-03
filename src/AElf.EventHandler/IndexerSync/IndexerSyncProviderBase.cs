@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using GraphQL;
@@ -19,6 +18,7 @@ public abstract class IndexerSyncProviderBase : IIndexerSyncProvider, ITransient
     public ILogger<IndexerSyncProviderBase> Logger { get; set; }
 
     protected const int MaxRequestCount = 1000;
+    protected const int SyncDelayLimit = 100;
 
     protected IndexerSyncProviderBase(IGraphQLClient graphQlClient, IDistributedCache<string> distributedCache)
     {
@@ -26,18 +26,17 @@ public abstract class IndexerSyncProviderBase : IIndexerSyncProvider, ITransient
         _distributedCache = distributedCache;
         Logger = NullLogger<IndexerSyncProviderBase>.Instance;
     }
-
-    // protected async Task<long> GetSyncEndHeightAsync(string chainId, long startHeight)
-    // {
-    //     var currentIndexHeight = await GetIndexBlockHeightAsync(chainId);
-    //     return Math.Min(startHeight + MaxRequestCount - 1, currentIndexHeight);
-    // }
+    
     protected long GetSyncEndHeight(long startHeight, long currentIndexHeight)
     {
-        return Math.Min(startHeight + MaxRequestCount - 1, currentIndexHeight);
+        return Math.Min(startHeight + MaxRequestCount - 1, currentIndexHeight - SyncDelayLimit);
     }
     
-
+    protected bool IsSyncFinished(long startHeight, long currentIndexHeight)
+    {
+        return startHeight >= currentIndexHeight - SyncDelayLimit;
+    }
+    
     protected async Task<T> QueryDataAsync<T>(GraphQLRequest request)
     {
         var data = await GraphQlClient.SendQueryAsync<T>(request);
