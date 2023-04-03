@@ -86,12 +86,7 @@ public class EventHandlerAppModule : AbpModule
             options.Connections.Default.Uri = new Uri(messageQueueConfig.GetSection("Uri").Value);
         });
         
-        Configure<AbpRabbitMqBackgroundJobOptions>(options =>
-        {
-            options.DefaultQueueNamePrefix = "oracle_client_transmit_jobs.";
-            options.DefaultDelayedQueueNamePrefix = "oracle_client_transmit_jobs.delayed";
-        });
-
+        Configure<AbpRabbitMqBackgroundJobOptions>(configuration.GetSection("AbpRabbitMqBackgroundJob"));
         Configure<OracleOptions>(configuration.GetSection("Oracle"));
         Configure<BridgeOptions>(configuration.GetSection("Bridge"));
         Configure<BlockConfirmationOptions>(configuration.GetSection("BlockConfirmation"));
