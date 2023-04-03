@@ -32,6 +32,11 @@ public abstract class IndexerSyncProviderBase : IIndexerSyncProvider, ITransient
         return Math.Min(startHeight + MaxRequestCount - 1, currentIndexHeight - SyncDelayLimit);
     }
     
+    protected bool IsSyncFinished(long startHeight, long currentIndexHeight)
+    {
+        return startHeight >= currentIndexHeight - SyncDelayLimit;
+    }
+    
     protected async Task<T> QueryDataAsync<T>(GraphQLRequest request)
     {
         var data = await GraphQlClient.SendQueryAsync<T>(request);
