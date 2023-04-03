@@ -7,6 +7,6 @@ public class TransmitProfile : Profile
 {
     public TransmitProfile()
     {
-        CreateMap<TransmitEto, TransmitCheckEto>().ReverseMap();
+        CreateMap<TransmitArgs, TransmitCheckArgs>().ReverseMap();
     }
 }

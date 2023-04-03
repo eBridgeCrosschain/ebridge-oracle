@@ -8,6 +8,7 @@ using AElf.Client.Core.Options;
 using AElf.Client.MerkleTree;
 using AElf.Client.Oracle;
 using AElf.Client.Report;
+using AElf.EventHandler.Dto;
 using AElf.EventHandler.Workers;
 using AElf.Nethereum.Bridge;
 using AElf.Nethereum.Core;
@@ -21,6 +22,7 @@ using RabbitMQ.Client;
 using Volo.Abp;
 using Volo.Abp.Autofac;
 using Volo.Abp.AutoMapper;
+using Volo.Abp.BackgroundJobs.RabbitMQ;
 using Volo.Abp.BackgroundWorkers;
 using Volo.Abp.Caching;
 using Volo.Abp.Caching.StackExchangeRedis;
@@ -42,7 +44,8 @@ namespace AElf.EventHandler;
     typeof(AElfNethereumBridgeModule),
     typeof(AbpCachingStackExchangeRedisModule),
     typeof(AbpBackgroundWorkersModule),
-    typeof(AbpAutoMapperModule)
+    typeof(AbpAutoMapperModule),
+    typeof(AbpBackgroundJobsRabbitMqModule)
 )]
 public class EventHandlerAppModule : AbpModule
 {
@@ -81,6 +84,12 @@ public class EventHandlerAppModule : AbpModule
             };
             options.Connections.Default.VirtualHost = "/";
             options.Connections.Default.Uri = new Uri(messageQueueConfig.GetSection("Uri").Value);
+        });
+        
+        Configure<AbpRabbitMqBackgroundJobOptions>(options =>
+        {
+            options.DefaultQueueNamePrefix = "oracle_client_transmit_jobs.";
+            options.DefaultDelayedQueueNamePrefix = "oracle_client_transmit_jobs.delayed";
         });
 
         Configure<OracleOptions>(configuration.GetSection("Oracle"));
