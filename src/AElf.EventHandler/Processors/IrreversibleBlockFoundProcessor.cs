@@ -16,18 +16,12 @@ public interface IIrreversibleBlockFoundProcessor
 
 public class IrreversibleBlockFoundProcessor : IIrreversibleBlockFoundProcessor,ITransientDependency
 {
-    private readonly IAElfClientService _aelfClientService;
-    private readonly AElfChainAliasOptions _chainAliasOptions;
     private readonly IChainProvider _chainProvider;
     public ILogger<IrreversibleBlockFoundProcessor> Logger { get; set; }
 
-    public IrreversibleBlockFoundProcessor(
-        IAElfClientService aelfClientService,
-        IOptionsSnapshot<AElfChainAliasOptions> chainAliasOptions, IChainProvider chainProvider) 
+    public IrreversibleBlockFoundProcessor(IChainProvider chainProvider) 
     {
-        _aelfClientService = aelfClientService;
         _chainProvider = chainProvider;
-        _chainAliasOptions = chainAliasOptions.Value;
 
         Logger = NullLogger<IrreversibleBlockFoundProcessor>.Instance;
     }
@@ -36,7 +30,6 @@ public class IrreversibleBlockFoundProcessor : IIrreversibleBlockFoundProcessor,
     {
         Logger.LogInformation("Irreversible block found, chain id: {Id}, height: {Height}", aelfChainId, libHeight);
         var chainId = _chainProvider.GetChainId(aelfChainId);
-        var clientAlias = _chainAliasOptions.Mapping[chainId];
         await _chainProvider.SetLastIrreversibleBlock(chainId, libHeight);
     }
 }

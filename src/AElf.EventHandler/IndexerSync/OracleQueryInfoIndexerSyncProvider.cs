@@ -34,19 +34,16 @@ public class OracleQueryInfoIndexerSyncProvider : IndexerSyncProviderBase
         while (true)
         {
             var data = await QueryDataAsync<OracleQueryInfoResponse>(GetRequest(chainId, startHeight, endHeight));
-            if (data == null || data.OracleQueryInfo.Count == 0)
-            {
-                await SetSyncHeightAsync(chainId, endHeight);
-            }
-            else
+            if (data != null && data.OracleQueryInfo.Count > 0)
             {
                 foreach (var oracleQueryInfo in data.OracleQueryInfo)
                 {
+                    Logger.LogDebug("Handle {Type}, sync height: {Height}", SyncType, oracleQueryInfo.BlockHeight);
                     await HandleDataAsync(oracleQueryInfo);
-                    await SetSyncHeightAsync(chainId, oracleQueryInfo.BlockHeight);
-                    Logger.LogDebug("Set {Type} sync height: {Height}", SyncType, oracleQueryInfo.BlockHeight);
                 }
             }
+            
+            await SetSyncHeightAsync(chainId, endHeight);
 
             if (IsSyncFinished(endHeight, currentIndexHeight))
             {
