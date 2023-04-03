@@ -78,18 +78,20 @@ public class TransmitCheckJob :
                         await _backgroundJobManager.EnqueueAsync(args,
                             delay: TimeSpan.FromSeconds(_retryTransmitInfoOptions.RetryCheckLib));
                     }
-
-                    var block = await _nethereumService.GetBlockByNumberAsync(ethAlias, receipt.BlockNumber);
-                    if (block.BlockHash != receipt.BlockHash)
-                    {
-                        Logger.LogError(
-                            "Transmit transaction forked.From chain:{FromId},Target Chain: {Id},TxId: {TxId}",
-                            args.ChainId, args.TargetChainId, args.TransactionId);
-                        PushFailedTransmitAsync(args);
-                    }
                     else
                     {
-                        Logger.LogInformation("Transmit transaction finished. TxId: {Id}", args.TransactionId);
+                        var block = await _nethereumService.GetBlockByNumberAsync(ethAlias, receipt.BlockNumber);
+                        if (block.BlockHash != receipt.BlockHash)
+                        {
+                            Logger.LogError(
+                                "Transmit transaction forked.From chain:{FromId},Target Chain: {Id},TxId: {TxId}",
+                                args.ChainId, args.TargetChainId, args.TransactionId);
+                            PushFailedTransmitAsync(args);
+                        }
+                        else
+                        {
+                            Logger.LogInformation("Transmit transaction finished. TxId: {Id}", args.TransactionId);
+                        }   
                     }
                 }
             }
