@@ -22,6 +22,8 @@ public class TransmitCheckEventHandler :
     public ILogger<TransmitCheckEventHandler> Logger { get; set; }
     private readonly IDistributedEventBus _distributedEventBus;
     private readonly ITransmitTransactionProvider _transmitTransactionProvider;
+    private readonly BridgeOptions _bridgeOptions;
+
 
 
     public TransmitCheckEventHandler(
@@ -29,6 +31,7 @@ public class TransmitCheckEventHandler :
         INethereumService nethereumService,
         IOptionsSnapshot<BlockConfirmationOptions> blockConfirmationOptions,
         IOptionsSnapshot<RetryTransmitInfoOptions> retryTransmitInfoOptions,
+        IOptionsSnapshot<BridgeOptions> bridgeOptions,
         IDistributedEventBus distributedEventBus,
         ITransmitTransactionProvider transmitTransactionProvider)
     {
@@ -38,10 +41,12 @@ public class TransmitCheckEventHandler :
         _ethereumAElfChainAliasOptions = ethereumAElfChainAliasOptions.Value;
         _blockConfirmationOptions = blockConfirmationOptions.Value;
         _retryTransmitInfoOptions = retryTransmitInfoOptions.Value;
+        _bridgeOptions = bridgeOptions.Value;
     }
 
     public async Task HandleEventAsync(TransmitCheckEto eventData)
     {
+        if (!_bridgeOptions.IsTransmitter) return;
         if (eventData.LastSendTransmitCheckTime != null)
         {
             if (!eventData.LastSendTransmitCheckTime.HasValue ||
@@ -49,7 +54,7 @@ public class TransmitCheckEventHandler :
                     .RetryTransmitCheckTimePeriod) > DateTime.UtcNow)
             {
                 throw new AbpException(
-                    $"Insufficient time interval.ChainId:{eventData.ChainId},Target Chain: {eventData.TargetChainId},swapId:{eventData.SwapHashId}");
+                    $"Insufficient time interval.ChainId:{eventData.ChainId},Target Chain: {eventData.TargetChainId},swapId:{eventData.SwapHashId.ToHex()}");
             }
         }
 
@@ -83,7 +88,7 @@ public class TransmitCheckEventHandler :
                         currentHeight - _blockConfirmationOptions.ConfirmationCount[eventData.TargetChainId])
                     {
                         throw new AbpException(
-                            $"Block is not confirmed.FromChainId:{eventData.ChainId},TargetChainId:{eventData.TargetChainId},SwapId:{eventData.SwapHashId},CurrentHeight:{currentHeight},BlockNumber:{receipt.BlockNumber}");
+                            $"Block is not confirmed.FromChainId:{eventData.ChainId},TargetChainId:{eventData.TargetChainId},SwapId:{eventData.SwapHashId.ToHex()},CurrentHeight:{currentHeight},BlockNumber:{receipt.BlockNumber}");
                     }
 
                     var block = await _nethereumService.GetBlockByNumberAsync(ethAlias, receipt.BlockNumber);
@@ -105,7 +110,7 @@ public class TransmitCheckEventHandler :
             {
                 Logger.LogError(
                     "Send Transmit check transaction Failed,From chain:{FromId},Target Chain: {ChainId},Swap id:{SwapId},TxId:{Id}. Message: {Message}",
-                    eventData.ChainId, eventData.TargetChainId, eventData.SwapHashId, eventData.TransactionId, e);
+                    eventData.ChainId, eventData.TargetChainId, eventData.SwapHashId.ToHex(), eventData.TransactionId, e);
                 eventData.LastSendTransmitCheckTime = DateTime.UtcNow;
                 await _distributedEventBus.PublishAsync(eventData);
             }

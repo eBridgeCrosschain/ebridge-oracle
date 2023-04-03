@@ -27,6 +27,7 @@ public class TransmitEventHandler :
     private readonly IObjectMapper<EventHandlerAppModule> _objectMapper;
     private readonly ITransmitTransactionProvider _transmitTransactionProvider;
     private readonly IChainProvider _chainProvider;
+    private readonly BridgeOptions _bridgeOptions;
 
     public ILogger<TransmitEventHandler> Logger { get; set; }
 
@@ -34,6 +35,7 @@ public class TransmitEventHandler :
         IAElfClientService aelfClientService,
         IOptionsSnapshot<AElfChainAliasOptions> aelfChainAliasOption,
         IOptionsSnapshot<RetryTransmitInfoOptions> retryTransmitInfoOptions,
+        IOptionsSnapshot<BridgeOptions> bridgeOptions,
         IBridgeOutService bridgeOutService,
         IDistributedEventBus distributedEventBus,
         IObjectMapper<EventHandlerAppModule> objectMapper,
@@ -48,15 +50,17 @@ public class TransmitEventHandler :
         _chainProvider = chainProvider;
         _aelfChainAliasOption = aelfChainAliasOption.Value;
         _retryTransmitInfoOptions = retryTransmitInfoOptions.Value;
+        _bridgeOptions = bridgeOptions.Value;
     }
 
     public async Task HandleEventAsync(TransmitEto eventData)
     {
+        if (!_bridgeOptions.IsTransmitter) return;
         var lib = await _chainProvider.GetLastIrreversibleBlock(eventData.ChainId);
         if (eventData.BlockHeight > lib.BlockHeight)
         {
             throw new AbpException(
-                $"Current transaction block height is higher than lib.SwapId:{eventData.SwapHashId}");
+                $"Current transaction block height is higher than lib.SwapId:{eventData.SwapHashId.ToHex()}");
         }
 
         if (eventData.LastSendTransmitTime != null)
@@ -66,7 +70,7 @@ public class TransmitEventHandler :
                 DateTime.UtcNow)
             {
                 throw new AbpException(
-                    $"Insufficient time interval since the last transmit was sent.SwapId:{eventData.SwapHashId}");
+                    $"Insufficient time interval since the last transmit was sent.SwapId:{eventData.SwapHashId.ToHex()}");
             }
         }
 
@@ -90,7 +94,7 @@ public class TransmitEventHandler :
                     if (string.IsNullOrWhiteSpace(sendResult))
                     {
                         Logger.LogError("Failed to transmit,chainId:{Chain},swapId:{Id}", eventData.ChainId,
-                            eventData.SwapHashId);
+                            eventData.SwapHashId.ToHex());
                         eventData.LastSendTransmitTime = DateTime.UtcNow;
                         await _distributedEventBus.PublishAsync(eventData);
                     }
@@ -107,7 +111,7 @@ public class TransmitEventHandler :
                 catch (Exception e)
                 {
                     Logger.LogError("Send Transmit transaction Failed,chainId:{Chain},swapId:{Id}. Message: {Message}",
-                        eventData.ChainId,eventData.SwapHashId, e);
+                        eventData.ChainId,eventData.SwapHashId.ToHex(), e);
                     eventData.LastSendTransmitTime = DateTime.UtcNow;
                     await _distributedEventBus.PublishAsync(eventData);
                 }
