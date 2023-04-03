@@ -10,8 +10,8 @@ using AElf.EventHandler.IndexerSync;
 using AElf.Types;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Volo.Abp.BackgroundJobs;
 using Volo.Abp.DependencyInjection;
-using Volo.Abp.EventBus.Distributed;
 
 namespace AElf.EventHandler;
 
@@ -28,13 +28,13 @@ public class ReportConfirmedProcessor : IReportConfirmedProcessor, ITransientDep
     private readonly IReportService _reportService;
     private readonly IBridgeService _bridgeService;
     private readonly IChainProvider _chainProvider;
-    private readonly IDistributedEventBus _distributedEventBus;
+    private readonly IBackgroundJobManager _backgroundJobManager;
 
     public ReportConfirmedProcessor(ILogger<ReportConfirmedProcessor> logger,
         ISignatureRecoverableInfoProvider signaturesRecoverableInfoProvider,
         IOptionsSnapshot<BridgeOptions> bridgeOptions, IReportService reportService,
         IBridgeService bridgeService, IChainProvider chainProvider, 
-        IDistributedEventBus distributedEventBus)
+        IBackgroundJobManager backgroundJobManager)
     {
         _logger = logger;
         _signaturesRecoverableInfoProvider = signaturesRecoverableInfoProvider;
@@ -42,7 +42,7 @@ public class ReportConfirmedProcessor : IReportConfirmedProcessor, ITransientDep
         _reportService = reportService;
         _bridgeService = bridgeService;
         _chainProvider = chainProvider;
-        _distributedEventBus = distributedEventBus;
+        _backgroundJobManager = backgroundJobManager;
     }
 
     public async Task ProcessAsync(string aelfChainId, ReportInfoDto reportQueryInfo)
@@ -97,7 +97,7 @@ public class ReportConfirmedProcessor : IReportConfirmedProcessor, ITransientDep
             "Try to transmit data, TargetChainId: {ChainId} Address: {Address}  RoundId: {RoundId}",
             reportQueryInfo.TargetChainId, ethereumContractAddress, reportQueryInfo.RoundId);
 
-        await _distributedEventBus.PublishAsync(new TransmitEto
+        await _backgroundJobManager.EnqueueAsync(new TransmitArgs
         {
             ChainId = chainId,
             TargetContractAddress = ethereumContractAddress,
@@ -109,7 +109,7 @@ public class ReportConfirmedProcessor : IReportConfirmedProcessor, ITransientDep
             SwapHashId = swapHashId,
             BlockHash = reportQueryInfo.BlockHash,
             BlockHeight = reportQueryInfo.BlockHeight
-        });
+        },delay:TimeSpan.FromSeconds(30));
 
         await _signaturesRecoverableInfoProvider.RemoveSignatureAsync(chainId,
             ethereumContractAddress, roundId);

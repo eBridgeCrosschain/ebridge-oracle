@@ -15,6 +15,5 @@ public class TransmitBase
     public byte[][] Rs { get; set; }
     public byte[][] Ss{ get; set; }
     public byte[] RawVs { get; set; }
-    public int SendTimes { get; set; }
     public DateTime? Time { get; set; }
 }

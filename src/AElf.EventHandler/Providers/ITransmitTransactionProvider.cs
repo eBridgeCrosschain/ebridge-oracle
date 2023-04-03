@@ -1,9 +1,12 @@
+using System;
 using System.Threading.Tasks;
 using AElf.EventHandler.Dto;
 using Microsoft.Extensions.Caching.StackExchangeRedis;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Nethereum.Hex.HexConvertors.Extensions;
 using StackExchange.Redis;
+using Volo.Abp.BackgroundJobs;
 using Volo.Abp.Caching;
 using Volo.Abp.Caching.StackExchangeRedis;
 using Volo.Abp.DependencyInjection;
@@ -20,7 +23,8 @@ public interface ITransmitTransactionProvider
 public class TransmitTransactionProvider : AbpRedisCache, ITransmitTransactionProvider, ISingletonDependency
 {
     private readonly IDistributedCacheSerializer _serializer;
-    private readonly IDistributedEventBus _distributedEventBus;
+    private readonly IBackgroundJobManager _backgroundJobManager;
+
 
     public ILogger<TransmitTransactionProvider> Logger { get; set; }
 
@@ -28,13 +32,13 @@ public class TransmitTransactionProvider : AbpRedisCache, ITransmitTransactionPr
 
     public TransmitTransactionProvider(IOptions<RedisCacheOptions> optionsAccessor,
         IDistributedCacheSerializer serializer,
-        IDistributedEventBus distributedEventBus)
+        IBackgroundJobManager backgroundJobManager)
         : base(optionsAccessor)
     {
         _serializer = serializer;
-        _distributedEventBus = distributedEventBus;
+        _backgroundJobManager = backgroundJobManager;
     }
-    
+
     public async Task PushFailedTransmitAsync<T>(T data)
     {
         await ConnectAsync();
@@ -57,10 +61,10 @@ public class TransmitTransactionProvider : AbpRedisCache, ITransmitTransactionPr
 
         foreach (var item in list)
         {
-            var toPublish = _serializer.Deserialize<TransmitEto>(item);
+            var toPublish = _serializer.Deserialize<TransmitArgs>(item);
             Logger.LogInformation(
-                "Start to publish.chain id:{Item},swap id:{Id}", toPublish.ChainId,toPublish.SwapHashId);
-            await _distributedEventBus.PublishAsync(toPublish);
+                "Start to publish.chain id:{Item},swap id:{Id}", toPublish.ChainId, toPublish.SwapHashId);
+            await _backgroundJobManager.EnqueueAsync(toPublish, BackgroundJobPriority.BelowNormal);
             await RedisDatabase.ListLeftPopAsync((RedisKey) TransmitFailedList);
         }
     }
