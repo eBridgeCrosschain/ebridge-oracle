@@ -13,7 +13,7 @@ public interface ISufficientCommitmentsCollectedProcessor
     Task ProcessAsync(string aelfChainId, OracleQueryInfoDto oracleQueryInfo);
 }
 
-public class SufficientCommitmentsCollectedProcessor :ISufficientCommitmentsCollectedProcessor,ITransientDependency
+public class SufficientCommitmentsCollectedProcessor : ISufficientCommitmentsCollectedProcessor, ITransientDependency
 {
     private readonly ISaltProvider _saltProvider;
     private readonly IDataProvider _dataProvider;
@@ -32,7 +32,7 @@ public class SufficientCommitmentsCollectedProcessor :ISufficientCommitmentsColl
         _oracleService = oracleService;
         _chainProvider = chainProvider;
     }
-    
+
     public async Task ProcessAsync(string aelfChainId, OracleQueryInfoDto oracleQueryInfo)
     {
         var chainId = _chainProvider.GetChainId(aelfChainId);
@@ -40,19 +40,18 @@ public class SufficientCommitmentsCollectedProcessor :ISufficientCommitmentsColl
         var data = await _dataProvider.GetDataAsync(queryId);
         if (string.IsNullOrEmpty(data))
         {
-            _logger.LogError("Failed to reveal data for query {Id}",oracleQueryInfo.QueryId);
+            _logger.LogError("Failed to reveal data for query {Id}", oracleQueryInfo.QueryId);
             return;
         }
         
-        _logger.LogInformation("Get data for revealing: {Data}",data);
         var revealInput = new RevealInput
         {
             QueryId = queryId,
             Data = data,
-            Salt = _saltProvider.GetSalt(chainId,queryId)
+            Salt = _saltProvider.GetSalt(chainId, queryId)
         };
-        _logger.LogInformation("Sending Reveal tx with input: {Input}",revealInput);
-        var transaction = await _oracleService.RevealAsync(chainId,revealInput);
-        _logger.LogInformation("[Reveal] Transaction id :{Id}",transaction.TransactionResult.TransactionId.ToHex());
+        var transaction = await _oracleService.RevealAsync(chainId, revealInput);
+        _logger.LogInformation("[Reveal] Sending Reveal tx with input: {Input},Transaction id :{Id},Data:{Data}",
+            transaction.TransactionResult.TransactionId.ToHex(),revealInput, data);
     }
 }

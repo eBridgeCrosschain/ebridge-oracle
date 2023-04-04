@@ -108,7 +108,8 @@ public class ReportConfirmedProcessor : IReportConfirmedProcessor, ITransientDep
             RawVs = vs,
             SwapHashId = swapHashId,
             BlockHash = reportQueryInfo.BlockHash,
-            BlockHeight = reportQueryInfo.BlockHeight
+            BlockHeight = reportQueryInfo.BlockHeight,
+            SwapId = ethereumSwapId
         },delay:TimeSpan.FromSeconds(30));
 
         await _signaturesRecoverableInfoProvider.RemoveSignatureAsync(chainId,
