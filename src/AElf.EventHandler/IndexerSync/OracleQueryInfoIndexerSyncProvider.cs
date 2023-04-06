@@ -31,7 +31,7 @@ public class OracleQueryInfoIndexerSyncProvider : IndexerSyncProviderBase
         var currentIndexHeight = await GetIndexBlockHeightAsync(chainId);
         var endHeight = GetSyncEndHeight(startHeight, currentIndexHeight);
 
-        while (true)
+        while (!IsSyncFinished(startHeight, currentIndexHeight))
         {
             var data = await QueryDataAsync<OracleQueryInfoResponse>(GetRequest(chainId, startHeight, endHeight));
             if (data != null && data.OracleQueryInfo.Count > 0)
@@ -45,11 +45,6 @@ public class OracleQueryInfoIndexerSyncProvider : IndexerSyncProviderBase
             
             await SetSyncHeightAsync(chainId, endHeight);
 
-            if (IsSyncFinished(endHeight, currentIndexHeight))
-            {
-                break;
-            }
-            
             startHeight = endHeight + 1;
             endHeight = GetSyncEndHeight(startHeight, currentIndexHeight);
         }

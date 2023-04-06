@@ -30,7 +30,7 @@ public class ReportInfoIndexerSyncProvider : IndexerSyncProviderBase
         var currentIndexHeight = await GetIndexBlockHeightAsync(chainId);
         var endHeight = GetSyncEndHeight(startHeight, currentIndexHeight);
 
-        while (true)
+        while (!IsSyncFinished(startHeight, currentIndexHeight))
         {
             var data = await QueryDataAsync<ReportInfoResponse>(GetRequest(chainId, startHeight, endHeight));
             if (data != null && data.ReportInfo.Count > 0)
@@ -43,11 +43,6 @@ public class ReportInfoIndexerSyncProvider : IndexerSyncProviderBase
             }
             
             await SetSyncHeightAsync(chainId, endHeight);
-
-            if (IsSyncFinished(endHeight, currentIndexHeight))
-            {
-                break;
-            }
 
             startHeight = endHeight + 1;
             endHeight = GetSyncEndHeight(startHeight, currentIndexHeight);

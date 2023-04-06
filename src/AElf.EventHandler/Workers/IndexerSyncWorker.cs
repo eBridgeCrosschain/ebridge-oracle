@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using AElf.EventHandler.IndexerSync;
 using Microsoft.Extensions.DependencyInjection;
+using Nito.AsyncEx;
 using Volo.Abp.BackgroundWorkers;
 using Volo.Abp.Threading;
 
@@ -24,12 +25,8 @@ public class IndexerSyncWorker : AsyncPeriodicBackgroundWorkerBase
 
     protected override async Task DoWorkAsync(PeriodicBackgroundWorkerContext workerContext)
     {
-        foreach (var chain in _chainProvider.GetAllChainIds())
-        {
-            foreach (var provider in _indexerSyncProviders)
-            {
-                await provider.ExecuteAsync(chain.Key);
-            }
-        }
+        var chainId = _chainProvider.GetAllChainIds().Keys;
+        var tasks = chainId.SelectMany(chain => _indexerSyncProviders.Select(provider => provider.ExecuteAsync(chain)));
+        await tasks.WhenAll();
     }
 }
