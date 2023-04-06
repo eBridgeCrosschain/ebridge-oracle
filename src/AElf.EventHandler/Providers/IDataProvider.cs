@@ -32,7 +32,7 @@ public class DataProvider : IDataProvider, ISingletonDependency
     private readonly IBridgeInService _bridgeInService;
 
     public DataProvider(
-        ILogger<DataProvider> logger, 
+        ILogger<DataProvider> logger,
         IOptionsSnapshot<BridgeOptions> bridgeOptions,
         IBridgeInService bridgeInService)
     {
@@ -56,67 +56,34 @@ public class DataProvider : IDataProvider, ISingletonDependency
 
         if (title == null || options == null)
         {
-            _logger.LogError("No data of {Id} for revealing",queryId);
+            _logger.LogError("No data of {Id} for revealing", queryId);
             return string.Empty;
         }
 
         if (title.StartsWith("record_receipts") && options.Count == 2)
         {
             var swapId = title.Split('_').Last();
-            _logger.LogInformation("Trying to query record receipt data. Swap id: {Id}",swapId);
+
             var bridgeItem = _bridgeOptions.BridgesIn.Single(c => c.SwapId == swapId);
-            _logger.LogInformation("About to handle record receipt hashes for swapping tokens");
             var recordReceiptHashInput =
                 await GetReceiptHashMap(Hash.LoadFromHex(swapId), bridgeItem, long.Parse(options[0].Split(".").Last()),
                     long.Parse(options[1].Split(".").Last()));
-            _logger.LogInformation("RecordReceiptHashInput: {Input}",recordReceiptHashInput);
+            _logger.LogInformation(
+                "Trying to query record receipt data. Swap id: {Id},About to handle record receipt hashes for swapping tokens,RecordReceiptHashInput: {Input}",
+                swapId, recordReceiptHashInput);
             _dictionary[queryId] = recordReceiptHashInput;
             return recordReceiptHashInput;
         }
 
-        string result;
-
-        if (!title.Contains('|'))
-        {
-            result = await GetSingleUrlDataAsync(title, options);
-        }
-        else
-        {
-            var urls = title.Split('|');
-            var urlAttributes = options.Select(a => a.Split('|')).ToList();
-            var dataList = new List<decimal>();
-            for (var i = 0; i < urls.Length; i++)
-            {
-                var singleData =
-                    await GetSingleUrlDataAsync(urls[i], urlAttributes.Select(a => a[i]).ToList());
-                if (singleData.Contains("\""))
-                {
-                    singleData = singleData.Replace("\"", "");
-                }
-
-                if (decimal.TryParse(singleData, out var decimalData))
-                {
-                    _logger.LogInformation("Add {Data} to data list",singleData);
-                    dataList.Add(decimalData);
-                }
-                else
-                {
-                    throw new Exception($"Error during paring {singleData} to decimal");
-                }
-            }
-
-            result = Aggregate(dataList);
-        }
-
-        _dictionary[queryId] = result;
-        return result;
+        return string.Empty;
     }
 
     private async Task<string> GetReceiptHashMap(Hash swapId, BridgeItemIn bridgeItem, long start, long end)
     {
         var token = _bridgeOptions.BridgesIn.Single(c => c.SwapId == swapId.ToHex()).OriginToken;
         var chainId = _bridgeOptions.BridgesIn.Single(c => c.SwapId == swapId.ToHex()).TargetChainId;
-        var receiptInfos = await _bridgeInService.GetSendReceiptInfosAsync(bridgeItem.ChainId,bridgeItem.EthereumBridgeInContractAddress, token, chainId,start,end);
+        var receiptInfos = await _bridgeInService.GetSendReceiptInfosAsync(bridgeItem.ChainId,
+            bridgeItem.EthereumBridgeInContractAddress, token, chainId, start, end);
         var receiptHashes = new List<Hash>();
         for (var i = 0; i <= end - start; i++)
         {
@@ -126,7 +93,7 @@ public class DataProvider : IDataProvider, ISingletonDependency
             var hash = HashHelper.ConcatAndCompute(amountHash, targetAddressHash, receiptIdHash);
             receiptHashes.Add(hash);
         }
-        
+
         var input = new ReceiptHashMap
         {
             SwapId = swapId.ToHex()
@@ -135,110 +102,7 @@ public class DataProvider : IDataProvider, ISingletonDependency
         {
             input.Value.Add(receiptInfos.Receipts[i].ReceiptId, receiptHashes[i].ToHex());
         }
-        
+
         return input.ToString();
-    }
-
-    private string Aggregate(List<decimal> dataList)
-    {
-        var finalPrice = dataList.OrderBy(p => p).ToList()[dataList.Count / 2]
-            .ToString(CultureInfo.InvariantCulture);
-
-        _logger.LogInformation("Final price: {Price}",finalPrice);
-
-        return finalPrice;
-    }
-
-    public async Task<string> GetSingleUrlDataAsync(string url, List<string> attributes)
-    {
-        _logger.LogInformation("Querying {Url} for attributes {Attribute} etc",url,attributes.First());
-
-        var data = string.Empty;
-        var response = string.Empty;
-        try
-        {
-            var client = new HttpClient { Timeout = TimeSpan.FromMinutes(2) };
-            using var responseMessage = await client.GetHttpResponseMessageWithRetryAsync(url, _logger);
-            response = await responseMessage.Content.ReadAsStringAsync();
-        }
-        catch (Exception e)
-        {
-            _logger.LogError("Error during querying: {Message}",e.Message);
-        }
-
-        try
-        {
-            _logger.LogInformation("Trying to parse response to json: {Response}",response);
-
-            if (response != string.Empty)
-            {
-                data = ParseJson(response, attributes);
-            }
-        }
-        catch (Exception e)
-        {
-            _logger.LogError("Error during parsing json: {Response}\n{Message}",response,e.Message);
-            throw;
-        }
-
-        if (string.IsNullOrEmpty(data))
-        {
-            data = "0";
-            _logger.LogError("Failed to get {Attribute} from {Response}, will just return 0",attributes.First(),response);
-
-        }
-
-        return data;
-    }
-
-    private string ParseJson(string response, List<string> attributes)
-    {
-        var jsonDoc = JsonDocument.Parse(response);
-        var data = string.Empty;
-
-        foreach (var attribute in attributes)
-        {
-            if (!attribute.Contains('/'))
-            {
-                if (jsonDoc.RootElement.TryGetProperty(attribute, out var targetElement))
-                {
-                    if (data == string.Empty)
-                    {
-                        data = targetElement.GetRawText();
-                    }
-                    else
-                    {
-                        data += $";{targetElement.GetRawText()}";
-                    }
-                }
-                else
-                {
-                    return data;
-                }
-            }
-            else
-            {
-                var attrs = attribute.Split('/');
-                var targetElement = jsonDoc.RootElement.GetProperty(attrs[0]);
-                foreach (var attr in attrs.Skip(1))
-                {
-                    if (!targetElement.TryGetProperty(attr, out targetElement))
-                    {
-                        return attr;
-                    }
-                }
-
-                if (data == string.Empty)
-                {
-                    data = targetElement.GetRawText();
-                }
-                else
-                {
-                    data += $";{targetElement.GetRawText()}";
-                }
-            }
-        }
-
-        return data;
     }
 }

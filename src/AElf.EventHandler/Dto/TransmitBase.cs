@@ -16,4 +16,5 @@ public class TransmitBase
     public byte[][] Ss{ get; set; }
     public byte[] RawVs { get; set; }
     public DateTime? Time { get; set; }
+    public string SwapId { get; set; }
 }

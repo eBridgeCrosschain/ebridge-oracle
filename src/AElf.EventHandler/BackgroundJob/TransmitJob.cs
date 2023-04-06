@@ -55,7 +55,7 @@ public class TransmitJob :
         var lib = await _chainProvider.GetLastIrreversibleBlock(args.ChainId);
         if (args.BlockHeight > lib.BlockHeight)
         {
-            Logger.LogDebug("Current transaction block height is higher than lib.SwapId:{Id}", args.SwapHashId.ToHex());
+            Logger.LogDebug("Current transaction block height is higher than lib.SwapId:{Id}", args.SwapId);
             await _backgroundJobManager.EnqueueAsync(args,
                 delay: TimeSpan.FromSeconds(_retryTransmitInfoOptions.RetryCheckLib));
         }
@@ -79,8 +79,8 @@ public class TransmitJob :
                         args.RawVs);
                     if (string.IsNullOrWhiteSpace(sendResult))
                     {
-                        Logger.LogError("Failed to transmit,chainId:{Chain},swapId:{Id}", args.ChainId,
-                            args.SwapHashId.ToHex());
+                        Logger.LogError("Failed to transmit,chainId:{Chain},target chain id:{TargetChainId},swapId:{Id}", args.ChainId,args.TargetChainId,
+                            args.SwapId);
                         await _backgroundJobManager.EnqueueAsync(args,
                             delay: TimeSpan.FromMinutes(_retryTransmitInfoOptions.RetryTransmitTimePeriod));
                     }
@@ -91,14 +91,14 @@ public class TransmitJob :
                             _objectMapper.Map<TransmitArgs, TransmitCheckArgs>(args),
                             delay: TimeSpan.FromMinutes(_retryTransmitInfoOptions.RetryTransmitTimePeriod));
                         Logger.LogInformation(
-                            "Send Transmit transaction. TxId: {Result}, Report: {Report}", sendResult,
-                            args.Report.ToHex());
+                            "Retry send Transmit transaction. TxId: {Result},chainId:{Chain},target chain id:{TargetChainId},swapId:{Id}", sendResult,
+                            args.ChainId,args.TargetChainId,args.SwapId);
                     }
                 }
                 catch (Exception e)
                 {
-                    Logger.LogError("Send Transmit transaction Failed,chainId:{Chain},swapId:{Id}. Message: {Message}",
-                        args.ChainId, args.SwapHashId.ToHex(), e);
+                    Logger.LogError("Send Transmit transaction Failed,chainId:{Chain},target chain id:{TargetChainId},swapId:{Id}. Message: {Message}",
+                        args.ChainId,args.TargetChainId,args.SwapId, e);
                     await _backgroundJobManager.EnqueueAsync(args,
                         delay: TimeSpan.FromMinutes(_retryTransmitInfoOptions.RetryTransmitTimePeriod));
                 }

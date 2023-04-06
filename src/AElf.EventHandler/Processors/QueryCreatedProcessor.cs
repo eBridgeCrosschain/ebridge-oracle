@@ -68,7 +68,7 @@ internal class QueryCreatedProcessor : IQueryCreatedProcessor,ITransientDependen
             }
         
             var salt = _saltProvider.GetSalt(chainId, queryId);
-            _logger.LogInformation("Queried data: {Data}, salt: {Salt}",data,salt);
+            _logger.LogInformation("Queried data: {Data}, salt: {Salt}",data,salt.ToHex());
             var commitInput = new CommitInput
             {
                 QueryId = queryId,

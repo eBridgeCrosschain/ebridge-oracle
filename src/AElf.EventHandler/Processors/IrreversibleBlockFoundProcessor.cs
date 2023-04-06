@@ -17,18 +17,19 @@ public interface IIrreversibleBlockFoundProcessor
 public class IrreversibleBlockFoundProcessor : IIrreversibleBlockFoundProcessor,ITransientDependency
 {
     private readonly IChainProvider _chainProvider;
-    public ILogger<IrreversibleBlockFoundProcessor> Logger { get; set; }
-
-    public IrreversibleBlockFoundProcessor(IChainProvider chainProvider) 
+    private readonly ILogger<IrreversibleBlockFoundProcessor> _logger;
+    
+    public IrreversibleBlockFoundProcessor(
+        IChainProvider chainProvider, 
+        ILogger<IrreversibleBlockFoundProcessor> logger)
     {
         _chainProvider = chainProvider;
-
-        Logger = NullLogger<IrreversibleBlockFoundProcessor>.Instance;
+        _logger = logger;
     }
     
     public async Task ProcessAsync(string aelfChainId, long libHeight)
     {
-        Logger.LogInformation("Irreversible block found, chain id: {Id}, height: {Height}", aelfChainId, libHeight);
+        _logger.LogInformation("Irreversible block found, chain id: {Id}, height: {Height}", aelfChainId, libHeight);
         var chainId = _chainProvider.GetChainId(aelfChainId);
         await _chainProvider.SetLastIrreversibleBlock(chainId, libHeight);
     }
