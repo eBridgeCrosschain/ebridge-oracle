@@ -25,8 +25,8 @@ public class IndexerSyncWorker : AsyncPeriodicBackgroundWorkerBase
 
     protected override async Task DoWorkAsync(PeriodicBackgroundWorkerContext workerContext)
     {
-        var chainId = _chainProvider.GetAllChainIds().Keys;
-        var tasks = chainId.SelectMany(chain => _indexerSyncProviders.Select(provider => provider.ExecuteAsync(chain)));
+        var chainIds = _chainProvider.GetAllChainIds().Keys;
+        var tasks = chainIds.SelectMany(chainId => _indexerSyncProviders.Select(provider => provider.ExecuteAsync(chainId)));
         await tasks.WhenAll();
     }
 }
