@@ -87,7 +87,7 @@ public class ReceiptProvider : IReceiptProvider, ITransientDependency
                 aliasAddress.Item1, aliasAddress.Item2);
             var sendReceiptIndexDto = await _bridgeInService.GetTransferReceiptIndexAsync(aliasAddress.Item1,
                 aliasAddress.Item2, tokenList, targetChainIdList);
-            for (var i = 0; i < tokenList.Count; i++)
+            var list = tokenList.Select(async (_,i) =>
             {
                 _logger.LogInformation(
                     "Transfer token:{Token}, target chain id:{ChainId}, token index:{Index}",
@@ -96,7 +96,8 @@ public class ReceiptProvider : IReceiptProvider, ITransientDependency
                 tokenIndex[tokenAndChainIdList[i]] = sendReceiptIndexDto.Indexes[i];
                 var targetChainId = _bridgeOptions.BridgesIn.Single(j => j.SwapId == item[i].SwapId).TargetChainId;
                 await SendQueryAsync(targetChainId, item[i], tokenIndex[(item[i].TargetChainId, item[i].OriginToken)]);
-            }
+            });
+            await Task.WhenAll(list);
         }
     }
 
