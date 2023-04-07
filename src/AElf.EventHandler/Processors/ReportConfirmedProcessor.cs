@@ -29,12 +29,14 @@ public class ReportConfirmedProcessor : IReportConfirmedProcessor, ITransientDep
     private readonly IBridgeService _bridgeService;
     private readonly IChainProvider _chainProvider;
     private readonly IBackgroundJobManager _backgroundJobManager;
+    private readonly RetryTransmitInfoOptions _retryTransmitInfoOptions;
 
     public ReportConfirmedProcessor(ILogger<ReportConfirmedProcessor> logger,
         ISignatureRecoverableInfoProvider signaturesRecoverableInfoProvider,
         IOptionsSnapshot<BridgeOptions> bridgeOptions, IReportService reportService,
         IBridgeService bridgeService, IChainProvider chainProvider, 
-        IBackgroundJobManager backgroundJobManager)
+        IBackgroundJobManager backgroundJobManager,
+        IOptionsSnapshot<RetryTransmitInfoOptions> retryTransmitInfoOptions)
     {
         _logger = logger;
         _signaturesRecoverableInfoProvider = signaturesRecoverableInfoProvider;
@@ -43,6 +45,7 @@ public class ReportConfirmedProcessor : IReportConfirmedProcessor, ITransientDep
         _bridgeService = bridgeService;
         _chainProvider = chainProvider;
         _backgroundJobManager = backgroundJobManager;
+        _retryTransmitInfoOptions = retryTransmitInfoOptions.Value;
     }
 
     public async Task ProcessAsync(string aelfChainId, ReportInfoDto reportQueryInfo)
@@ -110,7 +113,7 @@ public class ReportConfirmedProcessor : IReportConfirmedProcessor, ITransientDep
             BlockHash = reportQueryInfo.BlockHash,
             BlockHeight = reportQueryInfo.BlockHeight,
             SwapId = ethereumSwapId
-        },delay:TimeSpan.FromSeconds(30));
+        },delay:TimeSpan.FromSeconds(_retryTransmitInfoOptions.DelayTransmitTimePeriod));
 
         await _signaturesRecoverableInfoProvider.RemoveSignatureAsync(chainId,
             ethereumContractAddress, roundId);

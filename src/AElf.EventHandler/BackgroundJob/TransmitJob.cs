@@ -52,6 +52,7 @@ public class TransmitJob :
     public override async Task ExecuteAsync(TransmitArgs args)
     {
         if (!_bridgeOptions.IsTransmitter) return;
+        // Last Irreversible Block Height.
         var lib = await _chainProvider.GetLastIrreversibleBlock(args.ChainId);
         if (args.BlockHeight > lib.BlockHeight)
         {
