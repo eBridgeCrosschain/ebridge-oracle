@@ -1,12 +1,12 @@
 using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using Volo.Abp.DependencyInjection;
 
 namespace AElf.EventHandler;
 
 public class LatestQueriedReceiptCountProvider : ILatestQueriedReceiptCountProvider, ISingletonDependency
 {
-    private readonly Dictionary<string, LatestReceiptTime> _count = new Dictionary<string, LatestReceiptTime>();
+    private readonly ConcurrentDictionary<string, LatestReceiptTime> _count = new();
 
     public long Get(string symbol)
     {
@@ -21,7 +21,7 @@ public class LatestQueriedReceiptCountProvider : ILatestQueriedReceiptCountProvi
             return 0;
 
         }
-        _count.Add(symbol, new LatestReceiptTime
+        _count.TryAdd(symbol, new LatestReceiptTime
         {
             Timestamp = DateTime.UtcNow,
             Count = 0
