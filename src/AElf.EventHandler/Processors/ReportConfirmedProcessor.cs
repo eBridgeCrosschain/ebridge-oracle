@@ -70,7 +70,10 @@ public class ReportConfirmedProcessor : IReportConfirmedProcessor, ITransientDep
         var signatureRecoverableInfos =
             await _signaturesRecoverableInfoProvider.GetSignatureAsync(chainId,
                 ethereumContractAddress, roundId);
-        
+        foreach (var signature in signatureRecoverableInfos)
+        {
+            _logger.LogInformation("Log signature:RoundId:{RoundId},Signature: {Signature}", reportQueryInfo.RoundId,signature);
+        }
         if (signatureRecoverableInfos.Any(o => o.IsNullOrWhiteSpace()))
         {
             _logger.LogError("Wrong signature recoverable info: {}", reportQueryInfo.RoundId);
@@ -99,7 +102,7 @@ public class ReportConfirmedProcessor : IReportConfirmedProcessor, ITransientDep
         _logger.LogInformation(
             "Try to transmit data, TargetChainId: {ChainId} Address: {Address}  RoundId: {RoundId}",
             reportQueryInfo.TargetChainId, ethereumContractAddress, reportQueryInfo.RoundId);
-
+        
         await _backgroundJobManager.EnqueueAsync(new TransmitArgs
         {
             ChainId = chainId,
@@ -112,7 +115,8 @@ public class ReportConfirmedProcessor : IReportConfirmedProcessor, ITransientDep
             SwapHashId = swapHashId,
             BlockHash = reportQueryInfo.BlockHash,
             BlockHeight = reportQueryInfo.BlockHeight,
-            SwapId = ethereumSwapId
+            SwapId = ethereumSwapId,
+            RoundId = reportQueryInfo.RoundId
         },delay:TimeSpan.FromSeconds(_retryTransmitInfoOptions.DelayTransmitTimePeriod));
 
         await _signaturesRecoverableInfoProvider.RemoveSignatureAsync(chainId,

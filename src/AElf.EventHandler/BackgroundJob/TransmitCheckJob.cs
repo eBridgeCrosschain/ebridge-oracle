@@ -49,8 +49,9 @@ public class TransmitCheckJob :
         if (args.QueryTimes > _retryTransmitInfoOptions.MaxQueryTransmitTimes)
         {
             Logger.LogDebug(
-                "Transmit transaction query failed after retry {Count} times. Chain id:{FromId},Target Chain: {Id}, TxId: {TxId}",
-                _retryTransmitInfoOptions.MaxQueryTransmitTimes, args.ChainId, args.TargetChainId, args.TransactionId);
+                "Transmit transaction query failed after retry {Count} times. Chain id:{FromId},Target Chain: {Id}, TxId: {TxId},RoundId:{RoundId}",
+                _retryTransmitInfoOptions.MaxQueryTransmitTimes, args.ChainId, args.TargetChainId, args.TransactionId,
+                args.RoundId);
             PushFailedTransmitAsync(args);
         }
         else
@@ -62,8 +63,8 @@ public class TransmitCheckJob :
                 if (receipt == null || receipt.Status == null || receipt.Status.Value != 1)
                 {
                     Logger.LogDebug(
-                        "Transmit transaction query failed. Chain: {Id}, Target Chain: {TargetId}, TxId: {TxId}",
-                        args.ChainId, args.TargetChainId, args.TransactionId);
+                        "Transmit transaction query failed. Chain: {Id}, Target Chain: {TargetId}, TxId: {TxId},RoundId:{RoundId}",
+                        args.ChainId, args.TargetChainId, args.TransactionId, args.RoundId);
                     await _backgroundJobManager.EnqueueAsync(args,
                         delay: TimeSpan.FromMinutes(_retryTransmitInfoOptions.RetryTransmitCheckTimePeriod));
                 }
@@ -74,7 +75,9 @@ public class TransmitCheckJob :
                         currentHeight - _blockConfirmationOptions.ConfirmationCount[args.TargetChainId])
                     {
                         Logger.LogDebug(
-                            "Block is not confirmed.FromChainId:{Id},TargetChainId:{TargetId},SwapId:{SwapId},CurrentHeight:{CurrentHeight},BlockNumber:{BlockNumber}",args.ChainId,args.TargetChainId,args.SwapId,currentHeight,receipt.BlockNumber);
+                            "Block is not confirmed.FromChainId:{Id},TargetChainId:{TargetId},SwapId:{SwapId},RoundId:{RoundId},CurrentHeight:{CurrentHeight},BlockNumber:{BlockNumber}",
+                            args.ChainId, args.TargetChainId, args.SwapId, args.RoundId, currentHeight,
+                            receipt.BlockNumber);
                         await _backgroundJobManager.EnqueueAsync(args,
                             delay: TimeSpan.FromSeconds(_retryTransmitInfoOptions.RetryCheckLib));
                     }
@@ -90,16 +93,16 @@ public class TransmitCheckJob :
                         }
                         else
                         {
-                            Logger.LogInformation("Transmit transaction finished. TxId: {Id}", args.TransactionId);
-                        }   
+                            Logger.LogInformation("Transmit transaction finished. TxId: {Id},SwapId:{SwapId},RoundId:{RoundId}", args.TransactionId,args.SwapId,args.RoundId);
+                        }
                     }
                 }
             }
             catch (Exception e)
             {
                 Logger.LogError(
-                    "Send transmit check transaction Failed,From chain:{FromId},Target Chain: {ChainId},Swap id:{SwapId},TxId:{Id}. Message: {Message}",
-                    args.ChainId, args.TargetChainId, args.SwapId, args.TransactionId, e);
+                    "Send transmit check transaction Failed,From chain:{FromId},Target Chain: {ChainId},Swap id:{SwapId},RoundId:{RoundId},TxId:{Id}. Message: {Message}",
+                    args.ChainId, args.TargetChainId, args.SwapId, args.RoundId,args.TransactionId, e);
                 await _backgroundJobManager.EnqueueAsync(args,
                     delay: TimeSpan.FromMinutes(_retryTransmitInfoOptions.RetryTransmitCheckTimePeriod));
             }

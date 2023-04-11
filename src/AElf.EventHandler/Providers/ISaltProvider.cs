@@ -35,7 +35,7 @@ namespace AElf.EventHandler
             var randomStr = DateTime.UtcNow.Millisecond.ToString(CultureInfo.InvariantCulture) + Guid.NewGuid();
             salt = HashHelper.ConcatAndCompute(queryId, HashHelper.ComputeFrom(randomStr));
             _dictionary[key] = salt;
-            _logger.LogInformation("New salt for queryId {Id}: {Salt}. Using random string: {Random}",queryId,salt,randomStr);
+            _logger.LogInformation("New salt for queryId {Id}: {Salt}. Using random string: {Random}",queryId.ToHex(),salt.ToHex(),randomStr);
             return salt;
         }
     }

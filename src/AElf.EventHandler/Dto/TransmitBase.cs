@@ -17,4 +17,5 @@ public class TransmitBase
     public byte[] RawVs { get; set; }
     public DateTime? Time { get; set; }
     public string SwapId { get; set; }
+    public long RoundId { get; set; }
 }

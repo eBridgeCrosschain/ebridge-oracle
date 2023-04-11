@@ -80,8 +80,8 @@ public class TransmitJob :
                         args.RawVs);
                     if (string.IsNullOrWhiteSpace(sendResult))
                     {
-                        Logger.LogError("Failed to transmit,chainId:{Chain},target chain id:{TargetChainId},swapId:{Id}", args.ChainId,args.TargetChainId,
-                            args.SwapId);
+                        Logger.LogError("Failed to transmit,chainId:{Chain},target chain id:{TargetChainId},swapId:{Id},roundId:{RoundId}", args.ChainId,args.TargetChainId,
+                            args.SwapId,args.RoundId);
                         await _backgroundJobManager.EnqueueAsync(args,
                             delay: TimeSpan.FromMinutes(_retryTransmitInfoOptions.RetryTransmitTimePeriod));
                     }
@@ -92,14 +92,14 @@ public class TransmitJob :
                             _objectMapper.Map<TransmitArgs, TransmitCheckArgs>(args),
                             delay: TimeSpan.FromMinutes(_retryTransmitInfoOptions.RetryTransmitTimePeriod));
                         Logger.LogInformation(
-                            "Retry send Transmit transaction. TxId: {Result},chainId:{Chain},target chain id:{TargetChainId},swapId:{Id}", sendResult,
-                            args.ChainId,args.TargetChainId,args.SwapId);
+                            "Send transmit check transaction. TxId: {Result},chainId:{Chain},target chain id:{TargetChainId},swapId:{Id},roundId:{RoundId}", sendResult,
+                            args.ChainId,args.TargetChainId,args.SwapId,args.RoundId);
                     }
                 }
                 catch (Exception e)
                 {
-                    Logger.LogError("Send Transmit transaction Failed,chainId:{Chain},target chain id:{TargetChainId},swapId:{Id}. Message: {Message}",
-                        args.ChainId,args.TargetChainId,args.SwapId, e);
+                    Logger.LogError("Send Transmit transaction Failed,chainId:{Chain},target chain id:{TargetChainId},swapId:{Id},roundId:{RoundId}. Message: {Message}",
+                        args.ChainId,args.TargetChainId,args.SwapId,args.RoundId, e);
                     await _backgroundJobManager.EnqueueAsync(args,
                         delay: TimeSpan.FromMinutes(_retryTransmitInfoOptions.RetryTransmitTimePeriod));
                 }
