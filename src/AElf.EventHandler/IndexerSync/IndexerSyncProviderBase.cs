@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using GraphQL;
 using GraphQL.Client.Abstractions;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Volo.Abp.Caching;
@@ -77,7 +78,10 @@ public abstract class IndexerSyncProviderBase : IIndexerSyncProvider, ITransient
 
     protected async Task SetSyncHeightAsync(string chainId, long height)
     {
-        await _distributedCache.SetAsync(GetSyncHeightKey(chainId), height.ToString());
+        await _distributedCache.SetAsync(GetSyncHeightKey(chainId), height.ToString(), new DistributedCacheEntryOptions
+        {
+            AbsoluteExpiration = DateTimeOffset.MaxValue
+        });
     }
 
     private string GetSyncHeightKey(string chainId)

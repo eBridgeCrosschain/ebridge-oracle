@@ -1,6 +1,8 @@
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using AElf.Types;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Options;
 using Volo.Abp.Caching;
 using Volo.Abp.DependencyInjection;
@@ -42,6 +44,9 @@ public class ChainProvider : IChainProvider, ITransientDependency
         await _distributedCache.SetAsync(GetLibCacheKey(chainId), new BlockIndex
         {
             BlockHeight = blockHeight
+        }, new DistributedCacheEntryOptions
+        {
+            AbsoluteExpiration = DateTimeOffset.MaxValue
         });
     }
 
