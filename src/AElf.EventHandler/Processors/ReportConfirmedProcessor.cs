@@ -56,7 +56,7 @@ public class ReportConfirmedProcessor : IReportConfirmedProcessor, ITransientDep
         var roundId = reportQueryInfo.RoundId;
 
         //TODO:check permission
-        await _signaturesRecoverableInfoProvider.SetSignatureAsync(chainId, ethereumContractAddress, roundId,
+        await _signaturesRecoverableInfoProvider.SetSignatureAsync(chainId, targetChainId,ethereumContractAddress, roundId,
             reportQueryInfo.Signature);
         if (!reportQueryInfo.IsAllNodeConfirmed) return;
         if (!_bridgeOptions.IsTransmitter) return;
@@ -68,7 +68,7 @@ public class ReportConfirmedProcessor : IReportConfirmedProcessor, ITransientDep
         });
         _logger.LogInformation("Confirm raw report:{Report}", report.Value);
         var signatureRecoverableInfos =
-            await _signaturesRecoverableInfoProvider.GetSignatureAsync(chainId,
+            await _signaturesRecoverableInfoProvider.GetSignatureAsync(chainId,targetChainId,
                 ethereumContractAddress, roundId);
         foreach (var signature in signatureRecoverableInfos)
         {
@@ -119,7 +119,7 @@ public class ReportConfirmedProcessor : IReportConfirmedProcessor, ITransientDep
             RoundId = reportQueryInfo.RoundId
         },delay:TimeSpan.FromSeconds(_retryTransmitInfoOptions.DelayTransmitTimePeriod));
 
-        await _signaturesRecoverableInfoProvider.RemoveSignatureAsync(chainId,
+        await _signaturesRecoverableInfoProvider.RemoveSignatureAsync(chainId,targetChainId,
             ethereumContractAddress, roundId);
     }
 
