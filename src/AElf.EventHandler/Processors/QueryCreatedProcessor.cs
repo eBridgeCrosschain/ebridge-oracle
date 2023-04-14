@@ -47,8 +47,7 @@ internal class QueryCreatedProcessor : IQueryCreatedProcessor,ITransientDependen
 
     public async Task ProcessAsync(string aelfChainId, OracleQueryInfoDto oracleQueryInfo)
     {
-        if (oracleQueryInfo.QueryInfo.Title.Split("_").Last() ==
-            "de6baeb0f75f6d3c301661356b1f1f6e7e3c3ce179603e6597bed203a3f4a877")
+        if (oracleQueryInfo.BlockHeight < 28919600)
         {
             return;
         }
