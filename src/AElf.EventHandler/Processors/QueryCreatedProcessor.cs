@@ -47,10 +47,6 @@ internal class QueryCreatedProcessor : IQueryCreatedProcessor,ITransientDependen
 
     public async Task ProcessAsync(string aelfChainId, OracleQueryInfoDto oracleQueryInfo)
     {
-        if (oracleQueryInfo.BlockHeight < 28919600)
-        {
-            return;
-        }
         var chainId = _chainProvider.GetChainId(aelfChainId);
         
         var firstDesignatedNodeAddress = oracleQueryInfo.DesignatedNodeList.First();
