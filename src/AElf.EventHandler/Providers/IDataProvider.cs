@@ -98,9 +98,19 @@ public class DataProvider : IDataProvider, ISingletonDependency
         {
             SwapId = swapId.ToHex()
         };
+        _logger.LogInformation("swapId {Id},start index {Start},end index {End}", swapId,start, end);
         for (var i = 0; i <= end - start; i++)
         {
-            input.Value.Add(receiptInfos.Receipts[i].ReceiptId, receiptHashes[i].ToHex());
+            try
+            {
+                input.Value.Add(receiptInfos.Receipts[i].ReceiptId, receiptHashes[i].ToHex());
+            }
+            catch (Exception e)
+            {
+                _logger.LogInformation("swapId:{SwapId},Receipt id: {Id},message :{e}", swapId,receiptInfos.Receipts[i].ReceiptId,e.Message);
+                throw;
+            }
+            
         }
 
         return input.ToString();
