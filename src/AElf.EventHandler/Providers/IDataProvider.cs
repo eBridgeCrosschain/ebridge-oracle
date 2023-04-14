@@ -98,7 +98,7 @@ public class DataProvider : IDataProvider, ISingletonDependency
         {
             SwapId = swapId.ToHex()
         };
-        _logger.LogInformation("swapId {Id},start index {Start},end index {End}", swapId,start, end);
+        _logger.LogInformation("swapId {Id},start index {Start},end index {End}", swapId.ToHex(),start, end);
         for (var i = 0; i <= end - start; i++)
         {
             try
@@ -107,7 +107,7 @@ public class DataProvider : IDataProvider, ISingletonDependency
             }
             catch (Exception e)
             {
-                _logger.LogInformation("swapId:{SwapId},Receipt id: {Id},message :{e}", swapId,receiptInfos.Receipts[i].ReceiptId,e.Message);
+                _logger.LogInformation("swapId:{SwapId},Receipt id: {Id},message :{e}", swapId.ToHex(),receiptInfos.Receipts[i].ReceiptId,e.Message);
                 throw;
             }
             
