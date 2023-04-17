@@ -52,6 +52,6 @@ public class SufficientCommitmentsCollectedProcessor : ISufficientCommitmentsCol
         };
         var transaction = await _oracleService.RevealAsync(chainId, revealInput);
         _logger.LogInformation("[Reveal] Sending Reveal tx with input: {Input},Transaction id :{Id},Data:{Data}",
-            transaction.TransactionResult.TransactionId.ToHex(),revealInput, data);
+            revealInput,transaction.TransactionResult.TransactionId.ToHex(), data);
     }
 }
