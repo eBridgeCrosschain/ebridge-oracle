@@ -33,7 +33,7 @@ public class PriceSyncWorker : AsyncPeriodicBackgroundWorkerBase
         _tokenPriceService = tokenPriceService;
         _priceSyncOptions = priceSyncOptions.Value;
 
-        Timer.Period = 1000 * 60;
+        Timer.Period = 1000 * _priceSyncOptions.SyncInterval;
     }
 
     protected override async Task DoWorkAsync(PeriodicBackgroundWorkerContext workerContext)
