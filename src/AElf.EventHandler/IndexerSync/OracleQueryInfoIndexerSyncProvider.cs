@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using GraphQL;
 using GraphQL.Client.Abstractions;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Volo.Abp.Caching;
 
 namespace AElf.EventHandler.IndexerSync;
@@ -12,10 +13,13 @@ public class OracleQueryInfoIndexerSyncProvider : IndexerSyncProviderBase
 {
     private readonly IQueryCreatedProcessor _queryCreatedProcessor;
     private readonly ISufficientCommitmentsCollectedProcessor _sufficientCommitmentsCollectedProcessor;
-    
-    public OracleQueryInfoIndexerSyncProvider(IGraphQLClient graphQlClient, IDistributedCache<string> distributedCache, IQueryCreatedProcessor queryCreatedProcessor, ISufficientCommitmentsCollectedProcessor sufficientCommitmentsCollectedProcessor)
+
+    public OracleQueryInfoIndexerSyncProvider(IGraphQLClient graphQlClient, IDistributedCache<string> distributedCache,
+        IQueryCreatedProcessor queryCreatedProcessor,
+        ISufficientCommitmentsCollectedProcessor sufficientCommitmentsCollectedProcessor,
+        IOptionsSnapshot<IndexerSyncOptions> indexerSyncOptions)
         : base(
-            graphQlClient, distributedCache)
+            graphQlClient, distributedCache, indexerSyncOptions)
     {
         _queryCreatedProcessor = queryCreatedProcessor;
         _sufficientCommitmentsCollectedProcessor = sufficientCommitmentsCollectedProcessor;
