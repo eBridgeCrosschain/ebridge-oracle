@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using AElf.BlockchainTransactionFee;
 using AElf.Client.Bridge;
@@ -22,15 +23,18 @@ public class PriceSyncWorker : AsyncPeriodicBackgroundWorkerBase
     private readonly IBridgeService _bridgeService;
     private readonly IBlockchainTransactionFeeService _blockchainTransactionFeeService;
     private readonly ITokenPriceService _tokenPriceService;
+    private readonly IPriceFluctuationProvider _priceFluctuationProvider;
+
     public PriceSyncWorker(AbpAsyncTimer timer, IServiceScopeFactory serviceScopeFactory,
         IOptionsSnapshot<PriceSyncOptions> priceSyncOptions, IBridgeService bridgeService,
-        IBlockchainTransactionFeeService blockchainTransactionFeeService, ITokenPriceService tokenPriceService
-        ) : base(
+        IBlockchainTransactionFeeService blockchainTransactionFeeService, ITokenPriceService tokenPriceService,
+        IPriceFluctuationProvider priceFluctuationProvider) : base(
         timer, serviceScopeFactory)
     {
         _bridgeService = bridgeService;
         _blockchainTransactionFeeService = blockchainTransactionFeeService;
         _tokenPriceService = tokenPriceService;
+        _priceFluctuationProvider = priceFluctuationProvider;
         _priceSyncOptions = priceSyncOptions.Value;
 
         Timer.Period = 1000 * _priceSyncOptions.SyncInterval;
@@ -60,13 +64,37 @@ public class PriceSyncWorker : AsyncPeriodicBackgroundWorkerBase
                 PriceRatio_ = ratio
             });
         }
-        
-        foreach (var item in _priceSyncOptions.TargetChains)
+
+        await SetGasPriceAsync(setGasPriceInput);
+        await SetPriceRatioAsync(setPriceRatioInput);
+    }
+    
+    private async Task SetGasPriceAsync(SetGasPriceInput setGasPriceInput)
+    {
+        var gasPrice = setGasPriceInput.GasPriceList.ToDictionary(o=>o.ChainId,o=>o.GasPrice_);
+        if (_priceFluctuationProvider.IsGasPriceFluctuationExceeded(gasPrice))
         {
-            await _bridgeService.SetGasPriceAsync(item, setGasPriceInput);
-            Logger.LogDebug("SetGasPrice success, ChainId: {Item}",item);
-            await _bridgeService.SetPriceRatioAsync(item, setPriceRatioInput);
-            Logger.LogDebug("SetPriceRatio success, ChainId: {Item}",item);
+            foreach (var item in _priceSyncOptions.TargetChains)
+            {
+                await _bridgeService.SetGasPriceAsync(item, setGasPriceInput);
+                Logger.LogDebug("SetGasPrice success, ChainId: {Item}", item);
+            }
+            _priceFluctuationProvider.SetLatestGasPrice(gasPrice);
+        }
+    }
+
+    private async Task SetPriceRatioAsync(SetPriceRatioInput setPriceRatioInput)
+    {
+        var priceRatio = setPriceRatioInput.Value.ToDictionary(o => o.TargetChainId, o => o.PriceRatio_);
+        if (_priceFluctuationProvider.IsPriceRatioFluctuationExceeded(priceRatio))
+        {
+            foreach (var item in _priceSyncOptions.TargetChains)
+            {
+                await _bridgeService.SetPriceRatioAsync(item, setPriceRatioInput);
+                Logger.LogDebug("SetPriceRatio success, ChainId: {Item}", item);
+            }
+
+            _priceFluctuationProvider.SetLatestPriceRatio(priceRatio);
         }
     }
 }
