@@ -38,7 +38,7 @@ public class PriceFluctuationProvider: IPriceFluctuationProvider,ISingletonDepen
         }
 
         _priceSyncOptions.GasPriceFluctuationThreshold.TryGetValue(chainId, out var threshold);
-        var fluctuation = Math.Abs(gasPrice - latestGasPrice) / latestGasPrice;
+        var fluctuation = Math.Abs(gasPrice - latestGasPrice) / (float)latestGasPrice;
         if (fluctuation > threshold)
         {
             return true;
@@ -58,7 +58,7 @@ public class PriceFluctuationProvider: IPriceFluctuationProvider,ISingletonDepen
         }
 
         _priceSyncOptions.PriceRatioFluctuationThreshold.TryGetValue(symbol, out var threshold);
-        var fluctuation = Math.Abs(priceRatio - latestPriceRatio) / latestPriceRatio;
+        var fluctuation = Math.Abs(priceRatio - latestPriceRatio) / (float)latestPriceRatio;
         if (fluctuation > threshold)
         {
             return true;
