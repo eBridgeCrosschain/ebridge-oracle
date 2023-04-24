@@ -10,7 +10,7 @@ using Volo.Abp.DependencyInjection;
 
 namespace AElf.PriceWorker.PriceSync;
 
-public class GasPriceSyncProvider : IPriceSyncProvider, ITransientDependency
+public class GasPriceSyncProvider : IPriceSyncProvider
 {
     private readonly PriceSyncOptions _priceSyncOptions;
     private readonly IBridgeService _bridgeService;

@@ -31,6 +31,8 @@ public class AElfPriceWorkerModule : AbpModule
         var configuration = context.Services.GetConfiguration();
         Configure<PriceSyncOptions>(configuration.GetSection("PriceSync"));
         context.Services.AddHostedService<AElfPriceWorkerHostedService>();
+        context.Services.AddTransient<IPriceSyncProvider, GasPriceSyncProvider>();
+        context.Services.AddTransient<IPriceSyncProvider, PriceRatioProvider>();
     }
 
     public override void OnApplicationInitialization(ApplicationInitializationContext context)

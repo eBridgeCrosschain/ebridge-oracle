@@ -18,7 +18,6 @@ public class PriceSyncWorker : AsyncPeriodicBackgroundWorkerBase
         IOptionsSnapshot<PriceSyncOptions> priceSyncOptions, IEnumerable<IPriceSyncProvider> priceSyncProviders) : base(
         timer, serviceScopeFactory)
     {
-       
         _priceSyncProviders = priceSyncProviders.ToList();
         Timer.Period = 1000 * priceSyncOptions.Value.SyncInterval;
     }
