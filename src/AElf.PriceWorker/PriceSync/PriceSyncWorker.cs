@@ -24,8 +24,10 @@ public class PriceSyncWorker : AsyncPeriodicBackgroundWorkerBase
 
     protected override async Task DoWorkAsync(PeriodicBackgroundWorkerContext workerContext)
     {
+        Logger.LogInformation("Price sync started.");
         foreach (var priceSyncProvider in _priceSyncProviders)
         {
+            
             try
             {
                 await priceSyncProvider.ExecuteAsync();
