@@ -4,6 +4,7 @@ using System.Net.Http;
 using AElf.BlockchainTransactionFee;
 using AElf.Client.Bridge;
 using AElf.Client.Core;
+using AElf.PriceWorker.PriceSync;
 using AElf.TokenPrice;
 using AElf.TokenPrice.CoinGecko;
 using Microsoft.Extensions.DependencyInjection;
