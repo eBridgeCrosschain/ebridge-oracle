@@ -27,14 +27,13 @@ public class PriceSyncWorker : AsyncPeriodicBackgroundWorkerBase
         Logger.LogInformation("Price sync started.");
         foreach (var priceSyncProvider in _priceSyncProviders)
         {
-            
             try
             {
                 await priceSyncProvider.ExecuteAsync();
             }
             catch (Exception e)
             {
-                Logger.LogError(e,"Price sync failed.");
+                Logger.LogError(e, "Price sync failed.");
             }
         }
     }
