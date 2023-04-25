@@ -28,10 +28,10 @@ public class GasPriceSyncProvider : IPriceSyncProvider
         _blockchainTransactionFeeService = blockchainTransactionFeeService;
         _logger = logger;
     }
-    
+
     public async Task ExecuteAsync()
     {
-        var toSyncGasPrice = new Dictionary<string, long>();
+        var setGasPriceInput = new SetGasPriceInput();
         foreach (var item in _priceSyncOptions.SourceChains)
         {
             var gasFee = await _blockchainTransactionFeeService.GetTransactionFeeAsync(item.ChainType);
@@ -39,23 +39,17 @@ public class GasPriceSyncProvider : IPriceSyncProvider
 
             if (_priceFluctuationProvider.IsGasPriceFluctuationExceeded(item.ChainId, feeWei))
             {
-                toSyncGasPrice.Add(item.ChainId, feeWei);
+                setGasPriceInput.GasPriceList.Add(new GasPrice()
+                {
+                    ChainId = item.ChainId,
+                    GasPrice_ = feeWei
+                });
             }
         }
 
-        if (toSyncGasPrice.Count == 0)
+        if (setGasPriceInput.GasPriceList.Count == 0)
         {
             return;
-        }
-
-        var setGasPriceInput = new SetGasPriceInput();
-        foreach (var syncGasPrice in toSyncGasPrice)
-        {
-            setGasPriceInput.GasPriceList.Add(new GasPrice()
-            {
-                ChainId = syncGasPrice.Key,
-                GasPrice_ = syncGasPrice.Value
-            });
         }
 
         foreach (var item in _priceSyncOptions.TargetChains)
@@ -64,9 +58,9 @@ public class GasPriceSyncProvider : IPriceSyncProvider
             _logger.LogDebug("SetGasPrice success, ChainId: {chainId}", item);
         }
 
-        foreach (var syncGasPrice in toSyncGasPrice)
+        foreach (var syncGasPrice in setGasPriceInput.GasPriceList)
         {
-            _priceFluctuationProvider.SetLatestGasPrice(syncGasPrice.Key, syncGasPrice.Value);
+            _priceFluctuationProvider.SetLatestGasPrice(syncGasPrice.ChainId, syncGasPrice.GasPrice_);
         }
     }
 }

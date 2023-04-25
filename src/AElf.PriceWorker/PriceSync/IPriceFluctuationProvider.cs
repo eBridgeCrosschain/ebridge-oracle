@@ -14,7 +14,7 @@ public interface IPriceFluctuationProvider
     void SetLatestPriceRatio(string symbol, long priceRatio);
 }
 
-public class PriceFluctuationProvider: IPriceFluctuationProvider,ISingletonDependency
+public class PriceFluctuationProvider : IPriceFluctuationProvider, ISingletonDependency
 {
     private readonly PriceSyncOptions _priceSyncOptions;
     private readonly Dictionary<string, long> _latestGasPrice;
@@ -63,7 +63,7 @@ public class PriceFluctuationProvider: IPriceFluctuationProvider,ISingletonDepen
         {
             return true;
         }
-        
+
         _logger.LogDebug(
             "Price ratio fluctuation is not exceeded. Symbol: {Symbol}, PriceRatio: {PriceRatio}, LatestPriceRatio: {LatestPriceRatio}, Fluctuation: {Fluctuation}, Threshold: {Threshold}",
             symbol, priceRatio, latestPriceRatio, fluctuation, threshold);
