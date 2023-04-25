@@ -34,7 +34,7 @@ public class PriceSyncWorker : AsyncPeriodicBackgroundWorkerBase
             }
             catch (Exception e)
             {
-                Logger.LogError(e,"Price sync failed. {message}", e.Message);
+                Logger.LogError(e,"Price sync failed.");
             }
         }
     }
