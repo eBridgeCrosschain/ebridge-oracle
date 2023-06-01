@@ -1,16 +1,16 @@
-using System.Net;
-using System.Text.Json;
 using Newtonsoft.Json;
 
 namespace AElf.BlockchainTransactionFee;
 
 public class ApiClient
 {
+    private readonly IHttpClientFactory _httpClientFactory;
     private readonly HttpClient _httpClient;
-
-    public ApiClient()
+    
+    public ApiClient(IHttpClientFactory httpClientFactory)
     {
-        _httpClient = new HttpClient();
+        _httpClientFactory = httpClientFactory;
+        _httpClient = _httpClientFactory.CreateClient();
     }
 
     public async Task<T> GetAsync<T>(string uri)

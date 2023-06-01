@@ -7,6 +7,8 @@ namespace AElf.Client.Services;
 
 public interface IHttpService
 {
+    void setProperty(int timeoutSeconds, bool useCamelCase = false);
+    
     Task<T?> GetResponseAsync<T>(string url, string? version = null,
         HttpStatusCode expectedStatusCode = HttpStatusCode.OK);
 
@@ -21,11 +23,23 @@ public interface IHttpService
 
 public class HttpService : IHttpService
 {
-    private readonly bool _useCamelCase;
+    private bool _useCamelCase { get; set; }
     private HttpClient? Client { get; set; }
-    private int TimeoutSeconds { get; }
+    private readonly IHttpClientFactory _httpClientFactory;
+    private int TimeoutSeconds { get; set; }
+    
+    public HttpService(IHttpClientFactory httpClientFactory)
+    {
+        _httpClientFactory = httpClientFactory;
+    }
 
     public HttpService(int timeoutSeconds, bool useCamelCase = false)
+    {
+        _useCamelCase = useCamelCase;
+        TimeoutSeconds = timeoutSeconds;
+    }
+    
+    public void setProperty(int timeoutSeconds, bool useCamelCase = false)
     {
         _useCamelCase = useCamelCase;
         TimeoutSeconds = timeoutSeconds;
@@ -217,10 +231,8 @@ public class HttpService : IHttpService
     private HttpClient GetHttpClient(string? version = null)
     {
         if (Client != null) return Client;
-        Client = new HttpClient
-        {
-            Timeout = TimeSpan.FromSeconds(TimeoutSeconds)
-        };
+        Client = _httpClientFactory.CreateClient();
+        Client.Timeout = TimeSpan.FromSeconds(TimeoutSeconds);
         Client.DefaultRequestHeaders.Accept.Clear();
         Client.DefaultRequestHeaders.Accept.Add(
             MediaTypeWithQualityHeaderValue.Parse($"application/json{version}"));

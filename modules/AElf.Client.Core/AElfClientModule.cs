@@ -1,4 +1,5 @@
 using AElf.Client.Core.Options;
+using AElf.Client.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Volo.Abp.Autofac;
@@ -23,6 +24,7 @@ public class AElfClientModule : AbpModule
         Configure<AElfContractOptions>(options => { configuration.GetSection("AElfContract").Bind(options); });
         Configure<AElfChainAliasOptions>(options => { configuration.GetSection("AElfChainAlias").Bind(options); });
 
+        context.Services.AddSingleton<IHttpService, HttpService>();
         context.Services.AddSingleton<IAElfClientProvider, AElfClientProvider>();
         
         context.Services.AddAutoMapperObjectMapper<AElfClientModule>();

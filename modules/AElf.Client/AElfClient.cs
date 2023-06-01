@@ -10,10 +10,16 @@ public partial class AElfClient : IDisposable
     private string? _userName;
     private string? _password;
 
-    public AElfClient(string baseUrl, int timeOut = 60, string? userName = null, string? password = null,
+    public AElfClient(string baseUrl)
+    {
+        _baseUrl = baseUrl;
+    }
+
+    public AElfClient(IHttpService httpService, string baseUrl, int timeOut = 60, string? userName = null, string? password = null,
         bool useCamelCase = false)
     {
-        _httpService = new HttpService(timeOut, useCamelCase);
+        _httpService = httpService;
+        _httpService.setProperty(timeOut, useCamelCase);
         _baseUrl = baseUrl;
         _userName = userName;
         _password = password;

@@ -1,3 +1,5 @@
+using AElf.Client.Services;
+
 namespace AElf.Client;
 
 public sealed class AElfClientBuilder
@@ -9,9 +11,18 @@ public sealed class AElfClientBuilder
     private string? Password { get; set; }
 
     private bool IsUseCamelCase { get; set; }
+    
+    private readonly IHttpService _httpService;
 
     public AElfClientBuilder()
     {
+        NodeEndpoint = AElfClientConstants.LocalEndpoint;
+        Timeout = 60;
+    }
+    
+    public AElfClientBuilder(IHttpService httpService)
+    {
+        _httpService = httpService;
         NodeEndpoint = AElfClientConstants.LocalEndpoint;
         Timeout = 60;
     }
@@ -68,6 +79,6 @@ public sealed class AElfClientBuilder
 
     public AElfClient Build()
     {
-        return new AElfClient(NodeEndpoint, Timeout, UserName, Password, IsUseCamelCase);
+        return new AElfClient(_httpService, NodeEndpoint, Timeout, UserName, Password, IsUseCamelCase);
     }
 }
