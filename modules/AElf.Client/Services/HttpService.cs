@@ -7,8 +7,6 @@ namespace AElf.Client.Services;
 
 public interface IHttpService
 {
-    void SetProperty(int timeoutSeconds, bool useCamelCase = false);
-    
     Task<T?> GetResponseAsync<T>(string url, string? version = null,
         HttpStatusCode expectedStatusCode = HttpStatusCode.OK);
 
@@ -27,20 +25,10 @@ public class HttpService : IHttpService
     private int _timeoutSeconds { get; set; }
     private HttpClient? _client { get; set; }
     private readonly IHttpClientFactory _httpClientFactory;
-    
-    public HttpService(IHttpClientFactory httpClientFactory)
+
+    public HttpService(IHttpClientFactory httpClientFactory, int timeoutSeconds, bool useCamelCase = false)
     {
         _httpClientFactory = httpClientFactory;
-    }
-
-    public HttpService(int timeoutSeconds, bool useCamelCase = false)
-    {
-        _useCamelCase = useCamelCase;
-        _timeoutSeconds = timeoutSeconds;
-    }
-    
-    public void SetProperty(int timeoutSeconds, bool useCamelCase = false)
-    {
         _useCamelCase = useCamelCase;
         _timeoutSeconds = timeoutSeconds;
     }

@@ -1,5 +1,4 @@
 using AElf.Client.Core.Options;
-using AElf.Client.Services;
 using Microsoft.Extensions.Options;
 using Volo.Abp.DependencyInjection;
 
@@ -15,14 +14,14 @@ public interface IAElfClientProvider
 
 public class AElfClientProvider : Dictionary<AElfClientInfo, AElfClient>, IAElfClientProvider, ISingletonDependency
 {
-    private readonly IHttpService _httpService;
+    private readonly IHttpClientFactory _httpClientFactory;
     
-    public AElfClientProvider(IHttpService httpService, IOptionsSnapshot<AElfClientOptions> aelfClientOptions,
+    public AElfClientProvider(IHttpClientFactory httpClientFactory, IOptionsSnapshot<AElfClientOptions> aelfClientOptions,
         IOptionsSnapshot<AElfClientConfigOptions> aelfClientConfigOptions)
     {
-        _httpService = httpService;
+        _httpClientFactory = httpClientFactory;
         var useCamelCase = aelfClientConfigOptions.Value.CamelCase;
-        var clientBuilder = new AElfClientBuilder(_httpService);
+        var clientBuilder = new AElfClientBuilder(httpClientFactory);
         SetClient(clientBuilder.UsePublicEndpoint(EndpointType.MainNetMainChain).UseCamelCase(useCamelCase).Build(),
             "MainNet", AElfClientConstants.MainChainId, "MainChain", EndpointType.MainNetMainChain.ToString());
         SetClient(clientBuilder.UsePublicEndpoint(EndpointType.MainNetSideChain1).UseCamelCase(useCamelCase).Build(),
