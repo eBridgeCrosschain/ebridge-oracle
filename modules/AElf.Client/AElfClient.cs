@@ -19,7 +19,7 @@ public partial class AElfClient : IDisposable
         bool useCamelCase = false)
     {
         _httpService = httpService;
-        _httpService.setProperty(timeOut, useCamelCase);
+        _httpService.SetProperty(timeOut, useCamelCase);
         _baseUrl = baseUrl;
         _userName = userName;
         _password = password;

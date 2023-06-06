@@ -7,7 +7,7 @@ namespace AElf.Client.Services;
 
 public interface IHttpService
 {
-    void setProperty(int timeoutSeconds, bool useCamelCase = false);
+    void SetProperty(int timeoutSeconds, bool useCamelCase = false);
     
     Task<T?> GetResponseAsync<T>(string url, string? version = null,
         HttpStatusCode expectedStatusCode = HttpStatusCode.OK);
@@ -24,9 +24,9 @@ public interface IHttpService
 public class HttpService : IHttpService
 {
     private bool _useCamelCase { get; set; }
-    private HttpClient? Client { get; set; }
+    private int _timeoutSeconds { get; set; }
+    private HttpClient? _client { get; set; }
     private readonly IHttpClientFactory _httpClientFactory;
-    private int TimeoutSeconds { get; set; }
     
     public HttpService(IHttpClientFactory httpClientFactory)
     {
@@ -36,13 +36,13 @@ public class HttpService : IHttpService
     public HttpService(int timeoutSeconds, bool useCamelCase = false)
     {
         _useCamelCase = useCamelCase;
-        TimeoutSeconds = timeoutSeconds;
+        _timeoutSeconds = timeoutSeconds;
     }
     
-    public void setProperty(int timeoutSeconds, bool useCamelCase = false)
+    public void SetProperty(int timeoutSeconds, bool useCamelCase = false)
     {
         _useCamelCase = useCamelCase;
-        TimeoutSeconds = timeoutSeconds;
+        _timeoutSeconds = timeoutSeconds;
     }
 
     /// <summary>
@@ -230,14 +230,14 @@ public class HttpService : IHttpService
 
     private HttpClient GetHttpClient(string? version = null)
     {
-        if (Client != null) return Client;
-        Client = _httpClientFactory.CreateClient();
-        Client.Timeout = TimeSpan.FromSeconds(TimeoutSeconds);
-        Client.DefaultRequestHeaders.Accept.Clear();
-        Client.DefaultRequestHeaders.Accept.Add(
+        if (_client != null) return _client;
+        _client = _httpClientFactory.CreateClient();
+        _client.Timeout = TimeSpan.FromSeconds(_timeoutSeconds);
+        _client.DefaultRequestHeaders.Accept.Clear();
+        _client.DefaultRequestHeaders.Accept.Add(
             MediaTypeWithQualityHeaderValue.Parse($"application/json{version}"));
-        Client.DefaultRequestHeaders.Add("Connection", "close");
-        return Client;
+        _client.DefaultRequestHeaders.Add("Connection", "close");
+        return _client;
     }
 
     #endregion
