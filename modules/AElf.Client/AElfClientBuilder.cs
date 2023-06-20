@@ -15,14 +15,14 @@ public sealed class AElfClientBuilder
     public AElfClientBuilder()
     {
         NodeEndpoint = AElfClientConstants.LocalEndpoint;
-        Timeout = 60;
+        Timeout = AElfClientConstants.DefaultTimeout;
     }
     
     public AElfClientBuilder(IHttpClientFactory httpClientFactory)
     {
         _httpClientFactory = httpClientFactory;
         NodeEndpoint = AElfClientConstants.LocalEndpoint;
-        Timeout = 60;
+        Timeout = AElfClientConstants.DefaultTimeout;
     }
 
     public AElfClientBuilder UseEndpoint(string endpoint)
