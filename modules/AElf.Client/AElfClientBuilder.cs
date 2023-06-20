@@ -9,11 +9,20 @@ public sealed class AElfClientBuilder
     private string? Password { get; set; }
 
     private bool IsUseCamelCase { get; set; }
+    
+    private readonly IHttpClientFactory _httpClientFactory;
 
     public AElfClientBuilder()
     {
         NodeEndpoint = AElfClientConstants.LocalEndpoint;
-        Timeout = 60;
+        Timeout = AElfClientConstants.DefaultTimeout;
+    }
+    
+    public AElfClientBuilder(IHttpClientFactory httpClientFactory)
+    {
+        _httpClientFactory = httpClientFactory;
+        NodeEndpoint = AElfClientConstants.LocalEndpoint;
+        Timeout = AElfClientConstants.DefaultTimeout;
     }
 
     public AElfClientBuilder UseEndpoint(string endpoint)
@@ -68,6 +77,6 @@ public sealed class AElfClientBuilder
 
     public AElfClient Build()
     {
-        return new AElfClient(NodeEndpoint, Timeout, UserName, Password, IsUseCamelCase);
+        return new AElfClient(_httpClientFactory, NodeEndpoint, Timeout, UserName, Password, IsUseCamelCase);
     }
 }
