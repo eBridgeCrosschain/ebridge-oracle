@@ -93,6 +93,7 @@ public class EventHandlerAppModule : AbpModule
         Configure<ChainIdMappingOptions>(configuration.GetSection("ChainIdMapping"));
         Configure<FaultHandlingOptions>(configuration.GetSection("FaultHandling"));
         Configure<RetryTransmitInfoOptions>(configuration.GetSection("RetryTransmitInfo"));
+        Configure<IndexerSyncOptions>(configuration.GetSection("IndexerSync"));
         
         context.Services.AddHostedService<EventHandlerAppHostedService>();
         context.Services.AddSingleton<ITransmitTransactionProvider, TransmitTransactionProvider>();

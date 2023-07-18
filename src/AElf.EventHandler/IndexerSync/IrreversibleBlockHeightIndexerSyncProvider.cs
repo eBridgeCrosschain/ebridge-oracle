@@ -1,5 +1,6 @@
 using System.Threading.Tasks;
 using GraphQL.Client.Abstractions;
+using Microsoft.Extensions.Options;
 using Volo.Abp.Caching;
 
 namespace AElf.EventHandler.IndexerSync;
@@ -9,9 +10,10 @@ public class IrreversibleBlockHeightIndexerSyncProvider : IndexerSyncProviderBas
     private readonly IIrreversibleBlockFoundProcessor _irreversibleBlockFoundProcessor;
 
     public IrreversibleBlockHeightIndexerSyncProvider(IGraphQLClient graphQlClient,
-        IDistributedCache<string> distributedCache, IIrreversibleBlockFoundProcessor irreversibleBlockFoundProcessor)
+        IDistributedCache<string> distributedCache, IIrreversibleBlockFoundProcessor irreversibleBlockFoundProcessor,
+        IOptionsSnapshot<IndexerSyncOptions> indexerSyncOptions)
         : base(
-            graphQlClient, distributedCache)
+            graphQlClient, distributedCache, indexerSyncOptions)
     {
         _irreversibleBlockFoundProcessor = irreversibleBlockFoundProcessor;
     }

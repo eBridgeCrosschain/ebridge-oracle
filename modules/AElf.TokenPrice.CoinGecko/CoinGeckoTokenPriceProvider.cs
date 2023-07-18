@@ -19,14 +19,14 @@ namespace AElf.TokenPrice.CoinGecko
 
         public ILogger<CoinGeckoTokenPriceProvider> Logger { get; set; }
 
-        public CoinGeckoTokenPriceProvider(IRequestLimitProvider requestLimitProvider)
+        public CoinGeckoTokenPriceProvider(IRequestLimitProvider requestLimitProvider, ICoinGeckoClient coinGeckoClient)
         {
             _requestLimitProvider = requestLimitProvider;
-            _coinGeckoClient = CoinGeckoClient.Instance;
+            _coinGeckoClient = coinGeckoClient;
 
             Logger = NullLogger<CoinGeckoTokenPriceProvider>.Instance;
         }
-        
+
         public async Task<decimal> GetPriceAsync(string coinId)
         {
             try
