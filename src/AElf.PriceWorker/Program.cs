@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
+using AElf.BlockchainTransactionFee;
+using AElf.Client.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -52,6 +54,7 @@ namespace AElf.PriceWorker
                 .ConfigureServices((hostContext, services) =>
                 {
                     services.AddApplication<AElfPriceWorkerModule>();
+                    services.AddHttpClient();
                 })
                 .UseAutofac()
                 .UseSerilog();

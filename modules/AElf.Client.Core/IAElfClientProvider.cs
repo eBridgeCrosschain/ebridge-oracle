@@ -14,11 +14,14 @@ public interface IAElfClientProvider
 
 public class AElfClientProvider : Dictionary<AElfClientInfo, AElfClient>, IAElfClientProvider, ISingletonDependency
 {
-    public AElfClientProvider(IOptionsSnapshot<AElfClientOptions> aelfClientOptions,
+    private readonly IHttpClientFactory _httpClientFactory;
+    
+    public AElfClientProvider(IHttpClientFactory httpClientFactory, IOptionsSnapshot<AElfClientOptions> aelfClientOptions,
         IOptionsSnapshot<AElfClientConfigOptions> aelfClientConfigOptions)
     {
+        _httpClientFactory = httpClientFactory;
         var useCamelCase = aelfClientConfigOptions.Value.CamelCase;
-        var clientBuilder = new AElfClientBuilder();
+        var clientBuilder = new AElfClientBuilder(httpClientFactory);
         SetClient(clientBuilder.UsePublicEndpoint(EndpointType.MainNetMainChain).UseCamelCase(useCamelCase).Build(),
             "MainNet", AElfClientConstants.MainChainId, "MainChain", EndpointType.MainNetMainChain.ToString());
         SetClient(clientBuilder.UsePublicEndpoint(EndpointType.MainNetSideChain1).UseCamelCase(useCamelCase).Build(),

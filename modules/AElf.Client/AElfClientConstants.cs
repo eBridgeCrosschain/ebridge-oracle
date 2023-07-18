@@ -12,4 +12,5 @@ public class AElfClientConstants
     public const int MainChainId = 9992731;
     public const int SideChainId1 = 1866392;
     public const int SideChainId2 = 1931928;
+    public const int DefaultTimeout = 60;
 }
