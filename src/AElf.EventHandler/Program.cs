@@ -17,7 +17,7 @@ public class Program
 #else
                 .MinimumLevel.Information()
 #endif
-            .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
+            .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
             .Enrich.FromLogContext()
             .WriteTo.File("Logs/EventHandler-.logs", rollingInterval: RollingInterval.Day)
             .WriteTo.Async(c => c.Console())
