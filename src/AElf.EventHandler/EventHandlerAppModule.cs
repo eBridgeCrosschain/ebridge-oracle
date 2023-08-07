@@ -107,6 +107,8 @@ public class EventHandlerAppModule : AbpModule
         {
             options.AddMaps<EventHandlerAppModule>();
         });
+        
+        context.Services.AddHttpClient();
     }
     public override void OnApplicationInitialization(ApplicationInitializationContext context)
     {
