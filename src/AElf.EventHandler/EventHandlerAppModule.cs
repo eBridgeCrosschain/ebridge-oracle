@@ -94,7 +94,8 @@ public class EventHandlerAppModule : AbpModule
         Configure<FaultHandlingOptions>(configuration.GetSection("FaultHandling"));
         Configure<RetryTransmitInfoOptions>(configuration.GetSection("RetryTransmitInfo"));
         Configure<IndexerSyncOptions>(configuration.GetSection("IndexerSync"));
-        
+        Configure<ExpiredTimeOptions>(configuration.GetSection("ExpiredTime"));
+
         context.Services.AddHostedService<EventHandlerAppHostedService>();
         context.Services.AddSingleton<ITransmitTransactionProvider, TransmitTransactionProvider>();
         context.Services.AddSingleton<ISignatureRecoverableInfoProvider, SignatureRecoverableInfoProvider>();
