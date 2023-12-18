@@ -12,10 +12,10 @@ public class LatestQueriedReceiptCountProvider : ILatestQueriedReceiptCountProvi
     private readonly ExpiredTimeOptions _expiredTimeOptions;
     private readonly Logger<LatestQueriedReceiptCountProvider> _logger;
 
-    public LatestQueriedReceiptCountProvider(IOptionsMonitor<ExpiredTimeOptions> expiredTimeOptions, Logger<LatestQueriedReceiptCountProvider> logger)
+    public LatestQueriedReceiptCountProvider(IOptionsSnapshot<ExpiredTimeOptions> expiredTimeOptions, Logger<LatestQueriedReceiptCountProvider> logger)
     {
         _logger = logger;
-        _expiredTimeOptions = expiredTimeOptions.CurrentValue;
+        _expiredTimeOptions = expiredTimeOptions.Value;
     }
 
 
