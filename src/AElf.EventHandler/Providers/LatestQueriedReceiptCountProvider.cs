@@ -10,11 +10,11 @@ public class LatestQueriedReceiptCountProvider : ILatestQueriedReceiptCountProvi
 {
     private readonly ConcurrentDictionary<string, LatestReceiptTime> _count = new();
     private readonly ExpiredTimeOptions _expiredTimeOptions;
-    private readonly Logger<LatestQueriedReceiptCountProvider> _logger;
+    private readonly ILogger<LatestQueriedReceiptCountProvider> _logger;
 
     public LatestQueriedReceiptCountProvider(
         IOptionsSnapshot<ExpiredTimeOptions> expiredTimeOptions,
-        Logger<LatestQueriedReceiptCountProvider> logger)
+        ILogger<LatestQueriedReceiptCountProvider> logger)
     {
         _logger = logger;
         _expiredTimeOptions = expiredTimeOptions.Value;
