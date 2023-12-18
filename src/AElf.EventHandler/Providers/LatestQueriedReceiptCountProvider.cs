@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Concurrent;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Volo.Abp.DependencyInjection;
 
@@ -10,22 +9,17 @@ public class LatestQueriedReceiptCountProvider : ILatestQueriedReceiptCountProvi
 {
     private readonly ConcurrentDictionary<string, LatestReceiptTime> _count = new();
     private readonly ExpiredTimeOptions _expiredTimeOptions;
-    private readonly ILogger<LatestQueriedReceiptCountProvider> _logger;
 
     public LatestQueriedReceiptCountProvider(
-        IOptionsSnapshot<ExpiredTimeOptions> expiredTimeOptions,
-        ILogger<LatestQueriedReceiptCountProvider> logger)
+        IOptionsSnapshot<ExpiredTimeOptions> expiredTimeOptions)
     {
-        _logger = logger;
         _expiredTimeOptions = expiredTimeOptions.Value;
     }
-
 
     public long Get(string symbol)
     {
         if (_count.ContainsKey(symbol))
         {
-            _logger.LogInformation("Expired time:{time}", _expiredTimeOptions.ReceiptIndexExpiredTime);
             if (!((DateTime.UtcNow - _count[symbol].Timestamp).TotalSeconds >
                   _expiredTimeOptions.ReceiptIndexExpiredTime)) return _count[symbol].Count;
             _count[symbol] = new LatestReceiptTime
