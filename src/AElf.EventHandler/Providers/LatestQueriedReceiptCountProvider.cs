@@ -12,7 +12,9 @@ public class LatestQueriedReceiptCountProvider : ILatestQueriedReceiptCountProvi
     private readonly ExpiredTimeOptions _expiredTimeOptions;
     private readonly Logger<LatestQueriedReceiptCountProvider> _logger;
 
-    public LatestQueriedReceiptCountProvider(IOptionsSnapshot<ExpiredTimeOptions> expiredTimeOptions, Logger<LatestQueriedReceiptCountProvider> logger)
+    public LatestQueriedReceiptCountProvider(
+        IOptionsSnapshot<ExpiredTimeOptions> expiredTimeOptions,
+        Logger<LatestQueriedReceiptCountProvider> logger)
     {
         _logger = logger;
         _expiredTimeOptions = expiredTimeOptions.Value;
@@ -23,7 +25,7 @@ public class LatestQueriedReceiptCountProvider : ILatestQueriedReceiptCountProvi
     {
         if (_count.ContainsKey(symbol))
         {
-            _logger.LogInformation("Expired time:{time}",_expiredTimeOptions.ReceiptIndexExpiredTime);
+            _logger.LogInformation("Expired time:{time}", _expiredTimeOptions.ReceiptIndexExpiredTime);
             if (!((DateTime.UtcNow - _count[symbol].Timestamp).TotalSeconds >
                   _expiredTimeOptions.ReceiptIndexExpiredTime)) return _count[symbol].Count;
             _count[symbol] = new LatestReceiptTime

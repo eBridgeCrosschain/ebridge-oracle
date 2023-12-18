@@ -99,6 +99,7 @@ public class EventHandlerAppModule : AbpModule
         context.Services.AddHostedService<EventHandlerAppHostedService>();
         context.Services.AddSingleton<ITransmitTransactionProvider, TransmitTransactionProvider>();
         context.Services.AddSingleton<ISignatureRecoverableInfoProvider, SignatureRecoverableInfoProvider>();
+        context.Services.AddSingleton<ILatestQueriedReceiptCountProvider, LatestQueriedReceiptCountProvider>();
 
         ConfigureGraphQl(context, configuration);
         
