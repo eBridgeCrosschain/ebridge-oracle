@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using AElf.Nethereum.Core.Nethereum;
 using AElf.Nethereum.Core.Options;
 using Microsoft.Extensions.Options;
 using Nethereum.Web3;
@@ -6,7 +7,7 @@ using Volo.Abp.DependencyInjection;
 
 namespace AElf.Nethereum.Core;
 
-public interface INethereumClientProvider
+public interface INethereumClientProvider : IClientProvider
 {
     Web3 GetClient(string clientAlias, string accountAlias = null);
 }
@@ -23,10 +24,16 @@ public class NethereumClientProvider : ConcurrentDictionary<NethereumClientInfo,
         _ethereumClientOptions = ethereumClientOptions.Value;
     }
 
+    public List<string> GetClientAliasList()
+    {
+        return _ethereumClientOptions.ClientConfigList.Select(o => o.Alias).ToList();
+    }
+
     public Web3 GetClient(string clientAlias, string accountAlias = null)
     {
         var clientConfig = _ethereumClientOptions.ClientConfigList
             .FirstOrDefault(o => o.Alias == clientAlias);
+        
         Web3 client;
         if (string.IsNullOrWhiteSpace(accountAlias))
         {
