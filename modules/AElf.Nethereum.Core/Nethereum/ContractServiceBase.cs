@@ -1,3 +1,4 @@
+using AElf.Nethereum.Core.Nethereum;
 using AElf.Nethereum.Core.Options;
 using Microsoft.Extensions.Options;
 using Nethereum.Contracts;
