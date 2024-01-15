@@ -27,7 +27,7 @@ public class ReceiptProvider : IReceiptProvider, ITransientDependency
 {
     private readonly BridgeOptions _bridgeOptions;
     private readonly IBridgeInService _bridgeInService;
-    private readonly INethereumService _nethereumService;
+    private readonly IBlockchainService _blockchainService;
     private readonly IOracleService _oracleService;
     private readonly IBridgeService _bridgeContractService;
     private readonly IMerkleTreeContractService _merkleTreeContractService;
@@ -42,7 +42,7 @@ public class ReceiptProvider : IReceiptProvider, ITransientDependency
         IOptionsSnapshot<BlockConfirmationOptions> blockConfirmation,
         IOptionsSnapshot<AElfContractOptions> contractOptions,
         IBridgeInService bridgeInService,
-        INethereumService nethereumService,
+        IBlockchainService blockchainService,
         IOracleService oracleService,
         IBridgeService bridgeService,
         IMerkleTreeContractService merkleTreeContractService,
@@ -51,7 +51,7 @@ public class ReceiptProvider : IReceiptProvider, ITransientDependency
     {
         _bridgeOptions = bridgeOptions.Value;
         _bridgeInService = bridgeInService;
-        _nethereumService = nethereumService;
+        _blockchainService = blockchainService;
         _oracleService = oracleService;
         _bridgeContractService = bridgeService;
         _merkleTreeContractService = merkleTreeContractService;
@@ -153,7 +153,7 @@ public class ReceiptProvider : IReceiptProvider, ITransientDependency
         var notRecordTokenNumber = tokenIndex - nextRoundStartTokenIndex + 1;
         if (notRecordTokenNumber <= 0) return;
 
-        var blockNumber = await _nethereumService.GetBlockNumberAsync(bridgeItem.ChainId);
+        var blockNumber = await _blockchainService.GetBlockNumberAsync(bridgeItem.ChainId);
         var getReceiptInfos = await _bridgeInService.GetSendReceiptInfosAsync(bridgeItem.ChainId,
             bridgeItem.EthereumBridgeInContractAddress, bridgeItem.OriginToken, bridgeItem.TargetChainId,
             nextRoundStartTokenIndex, (long) tokenIndex);
