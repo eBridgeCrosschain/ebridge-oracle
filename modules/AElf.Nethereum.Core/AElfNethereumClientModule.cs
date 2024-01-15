@@ -21,5 +21,9 @@ public class AElfNethereumClientModule : AbpModule
         Configure<EthereumContractOptions>(configuration.GetSection("EthereumContract"));
         Configure<EthereumChainAliasOptions>(configuration.GetSection("EthereumChainAlias"));
         Configure<EthereumClientOptions>(configuration.GetSection("EthereumClient"));
+        
+        Configure<TronAccountOptions>(configuration.GetSection("TronAccount"));
+        Configure<TronChainAliasOptions>(configuration.GetSection("TronChainAlias"));
+        Configure<TronClientOptions>(configuration.GetSection("TronClient"));
     }
 }
