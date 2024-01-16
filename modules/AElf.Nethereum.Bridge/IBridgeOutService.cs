@@ -1,11 +1,13 @@
-﻿namespace AElf.Nethereum.Bridge;
+﻿using Volo.Abp.DependencyInjection;
+
+namespace AElf.Nethereum.Bridge;
 
 public interface IBridgeOutService
 {
     Task<string> TransmitAsync(string chainId, string contractAddress, byte[] swapHashId, byte[] report, byte[][] rs, byte[][] ss, byte[] rawVs);
 }
 
-public class BridgeOutService : ClientProviderAggregatorBase<IClientBridgeOutService>, IBridgeOutService
+public class BridgeOutService : ClientProviderAggregatorBase<IClientBridgeOutService>, IBridgeOutService, ITransientDependency
 {
     public BridgeOutService(IEnumerable<IClientBridgeOutService> bridgeOutServices) : base(bridgeOutServices)
     {
