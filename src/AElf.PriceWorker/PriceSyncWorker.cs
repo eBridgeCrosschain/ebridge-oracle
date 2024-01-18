@@ -45,11 +45,10 @@ public class PriceSyncWorker : AsyncPeriodicBackgroundWorkerBase
         foreach (var item in _priceSyncOptions.SourceChains)
         {
             var gasFee = await _blockchainTransactionFeeService.GetTransactionFeeAsync(item.ChainType);
-            var feeWei = (long)(gasFee.Fee * (decimal)Math.Pow(10, 9));
             setGasPriceInput.GasPriceList.Add(new GasPrice
             {
                 ChainId = item.ChainId,
-                GasPrice_ = feeWei
+                GasPrice_ = gasFee.FeeInSmallestUnit
             });
         
             var nativePrice = await _tokenPriceService.GetPriceAsync(item.NativeToken);

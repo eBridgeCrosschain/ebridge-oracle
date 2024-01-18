@@ -26,11 +26,13 @@ public class BSCTransactionFeeProvider : IBlockchainTransactionFeeProvider
         {
             throw new HttpRequestException($"BSC api failed: {result.Message}");
         }
+        
+        var feeWei = (long)(decimal.Parse(result.Result.SafeGasPrice) * (decimal)Math.Pow(10, 9));
 
         return new TransactionFeeDto
         {
             Symbol = "BNB",
-            Fee = decimal.Parse(result.Result.SafeGasPrice)
+            FeeInSmallestUnit = feeWei
         };
     }
 }
