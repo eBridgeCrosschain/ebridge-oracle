@@ -35,8 +35,8 @@ public class TronBridgeOutService : IClientBridgeOutService, ITransientDependenc
             FunctionMessage = transmitFunctionMessage,
             Visible = true
         });
-        var price = await tronClient.GetLatestEnergyPrice();
-        var feeLimit = energyUsed * price * 2;
+        var latestEnergyPrice = await tronClient.GetLatestEnergyPrice();
+        var feeLimit = energyUsed * latestEnergyPrice * 2;
         
         Logger.LogInformation($"Transmit params: report:{report.ToHex()},rawVs:{rawVs.ToHex()} feeLimit:{feeLimit}");
         foreach (var r in rs)
