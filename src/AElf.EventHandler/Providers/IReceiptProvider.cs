@@ -208,8 +208,7 @@ public class ReceiptProvider : IReceiptProvider, ITransientDependency
             CallbackInfo = new CallbackInfo
             {
                 ContractAddress =
-                    _contractOptions.ContractAddressList[chainId]["BridgeContract"].ConvertAddress(),
-                MethodName = "RecordReceiptHash"
+                    _contractOptions.ContractAddressList[chainId]["BridgeContract"].ConvertAddress()
             },
             DesignatedNodeList = new AddressList
             {
