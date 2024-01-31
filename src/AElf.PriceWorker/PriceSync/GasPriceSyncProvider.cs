@@ -35,14 +35,13 @@ public class GasPriceSyncProvider : IPriceSyncProvider
         foreach (var item in _priceSyncOptions.SourceChains)
         {
             var gasFee = await _blockchainTransactionFeeService.GetTransactionFeeAsync(item.ChainType);
-            var feeWei = (long)(gasFee.Fee * (decimal)Math.Pow(10, 9));
 
-            if (_priceFluctuationProvider.IsGasPriceFluctuationExceeded(item.ChainId, feeWei))
+            if (_priceFluctuationProvider.IsGasPriceFluctuationExceeded(item.ChainId, gasFee.FeeInSmallestUnit))
             {
                 setGasPriceInput.GasPriceList.Add(new GasPrice()
                 {
                     ChainId = item.ChainId,
-                    GasPrice_ = feeWei
+                    GasPrice_ = gasFee.FeeInSmallestUnit
                 });
             }
         }
