@@ -27,7 +27,7 @@ public class BridgeInService : ClientProviderAggregatorBase<IClientBridgeInServi
         return await clientProvider.GetTransferReceiptIndexAsync(chainId, contractAddress, tokens, targetChainIds);
     }
 
-    protected BridgeInService(IEnumerable<IClientBridgeInService> clientProviders) : base(clientProviders)
+    public BridgeInService(IEnumerable<IClientBridgeInService> bridgeInServices) : base(bridgeInServices)
     {
     }
 }
