@@ -2,6 +2,7 @@ using System;
 using System.Threading.Tasks;
 using AElf.EventHandler.Dto;
 using AElf.Nethereum.Core;
+using AElf.Nethereum.Core.Dtos;
 using AElf.Nethereum.Core.Options;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -15,7 +16,8 @@ public class TransmitCheckJob :
     AsyncBackgroundJob<TransmitCheckArgs>, ISingletonDependency
 {
     private readonly EthereumChainAliasOptions _ethereumAElfChainAliasOptions;
-    private readonly INethereumService _nethereumService;
+    private readonly TronChainAliasOptions _tronChainAliasOptions;
+    private readonly IBlockchainService _blockchainService;
     private readonly BlockConfirmationOptions _blockConfirmationOptions;
     private readonly RetryTransmitInfoOptions _retryTransmitInfoOptions;
     private readonly IBackgroundJobManager _backgroundJobManager;
@@ -25,17 +27,19 @@ public class TransmitCheckJob :
 
     public TransmitCheckJob(
         IOptionsSnapshot<EthereumChainAliasOptions> ethereumAElfChainAliasOptions,
-        INethereumService nethereumService,
+        IOptionsSnapshot<TronChainAliasOptions> tronAElfChainAliasOptions,
+        IBlockchainService blockchainService,
         IOptionsSnapshot<BlockConfirmationOptions> blockConfirmationOptions,
         IOptionsSnapshot<RetryTransmitInfoOptions> retryTransmitInfoOptions,
         IOptionsSnapshot<BridgeOptions> bridgeOptions,
         ITransmitTransactionProvider transmitTransactionProvider,
         IBackgroundJobManager backgroundJobManager)
     {
-        _nethereumService = nethereumService;
+        _blockchainService = blockchainService;
         _transmitTransactionProvider = transmitTransactionProvider;
         _backgroundJobManager = backgroundJobManager;
         _ethereumAElfChainAliasOptions = ethereumAElfChainAliasOptions.Value;
+        _tronChainAliasOptions = tronAElfChainAliasOptions.Value;
         _blockConfirmationOptions = blockConfirmationOptions.Value;
         _retryTransmitInfoOptions = retryTransmitInfoOptions.Value;
         _bridgeOptions = bridgeOptions.Value;
@@ -45,7 +49,10 @@ public class TransmitCheckJob :
     {
         if (!_bridgeOptions.IsTransmitter) return;
 
-        var ethAlias = _ethereumAElfChainAliasOptions.Mapping[args.TargetChainId];
+        if(!_ethereumAElfChainAliasOptions.Mapping.TryGetValue(args.TargetChainId, out var chainAlias))
+        {
+            chainAlias = _tronChainAliasOptions.Mapping[args.TargetChainId];
+        }
         if (args.QueryTimes > _retryTransmitInfoOptions.MaxQueryTransmitTimes)
         {
             Logger.LogDebug(
@@ -59,8 +66,8 @@ public class TransmitCheckJob :
             args.QueryTimes += 1;
             try
             {
-                var receipt = await _nethereumService.GetTransactionReceiptAsync(ethAlias, args.TransactionId);
-                if (receipt == null || receipt.Status == null || receipt.Status.Value != 1)
+                var receipt = await _blockchainService.GetTransactionReceiptAsync(chainAlias, args.TransactionId);
+                if (receipt == null || receipt.Status != TransactionStatus.Success)
                 {
                     Logger.LogDebug(
                         "Transmit transaction query failed. Chain: {Id}, Target Chain: {TargetId}, TxId: {TxId},RoundId:{RoundId}",
@@ -70,8 +77,8 @@ public class TransmitCheckJob :
                 }
                 else
                 {
-                    var currentHeight = await _nethereumService.GetBlockNumberAsync(ethAlias);
-                    if (receipt.BlockNumber.ToLong() >=
+                    var currentHeight = await _blockchainService.GetBlockNumberAsync(chainAlias);
+                    if (receipt.BlockNumber >=
                         currentHeight - _blockConfirmationOptions.ConfirmationCount[args.TargetChainId])
                     {
                         Logger.LogDebug(
@@ -83,7 +90,7 @@ public class TransmitCheckJob :
                     }
                     else
                     {
-                        var block = await _nethereumService.GetBlockByNumberAsync(ethAlias, receipt.BlockNumber);
+                        var block = await _blockchainService.GetBlockByNumberAsync(chainAlias, receipt.BlockNumber);
                         if (block.BlockHash != receipt.BlockHash)
                         {
                             Logger.LogError(

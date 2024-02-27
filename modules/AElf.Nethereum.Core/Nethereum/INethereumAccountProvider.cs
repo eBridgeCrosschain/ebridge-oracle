@@ -4,11 +4,10 @@ using Microsoft.Extensions.Options;
 using Nethereum.Web3.Accounts;
 using Volo.Abp.DependencyInjection;
 
-namespace AElf.Nethereum.Core;
+namespace AElf.Nethereum.Core.Nethereum;
 
-public interface INethereumAccountProvider
+public interface INethereumAccountProvider : IAccountProvider<Account>
 {
-    Account GetAccount(string alias);
 }
 
 public class NethereumAccountProvider : ConcurrentDictionary<string, EthereumAccountConfig>, INethereumAccountProvider, ISingletonDependency

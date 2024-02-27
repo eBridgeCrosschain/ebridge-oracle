@@ -1,3 +1,4 @@
+using AElf.Nethereum.Core.Nethereum;
 using AElf.Nethereum.Core.Options;
 using Microsoft.Extensions.Options;
 using Nethereum.Contracts;
@@ -16,6 +17,10 @@ public abstract class ContractServiceBase
     public IOptionsSnapshot<EthereumClientConfigOptions> EthereumClientConfigOptions { get; set; }
     public IOptionsSnapshot<EthereumChainAliasOptions> EthereumAElfChainAliasOptions { get; set; }
     protected abstract string SmartContractName { get; }
+    protected List<string> GetChainIdList()
+    {
+        return NethereumClientProvider.GetClientAliasList();
+    }
 
     protected Function GetFunction(string chainId, string contractAddress, string methodName)
     {

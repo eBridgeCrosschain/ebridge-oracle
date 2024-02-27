@@ -26,11 +26,13 @@ public class EthereumTransactionFeeProvider : IBlockchainTransactionFeeProvider
         {
             throw new HttpRequestException($"Ethereum api failed: {result.Message}");
         }
+        
+        var feeWei = (long)(decimal.Parse(result.Result.SafeGasPrice) * (decimal)Math.Pow(10, 9));
 
         return new TransactionFeeDto
         {
             Symbol = "ETH",
-            Fee = decimal.Parse(result.Result.SafeGasPrice)
+            FeeInSmallestUnit = feeWei
         };
     }
 }

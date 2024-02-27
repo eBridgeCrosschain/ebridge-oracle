@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using GraphQL;
 using GraphQL.Client.Abstractions;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Volo.Abp.Caching;
 
 namespace AElf.EventHandler.IndexerSync;
@@ -12,9 +13,11 @@ public class ReportInfoIndexerSyncProvider : IndexerSyncProviderBase
 {
     private readonly IReportProposedProcessor _reportProposedProcessor;
     private readonly IReportConfirmedProcessor _reportConfirmedProcessor;
-    
-    public ReportInfoIndexerSyncProvider(IGraphQLClient graphQlClient, IDistributedCache<string> distributedCache, IReportProposedProcessor reportProposedProcessor, IReportConfirmedProcessor reportConfirmedProcessor) : base(
-        graphQlClient,distributedCache)
+
+    public ReportInfoIndexerSyncProvider(IGraphQLClient graphQlClient, IDistributedCache<string> distributedCache,
+        IReportProposedProcessor reportProposedProcessor, IReportConfirmedProcessor reportConfirmedProcessor,
+        IOptionsSnapshot<IndexerSyncOptions> indexerSyncOptions) : base(
+        graphQlClient, distributedCache, indexerSyncOptions)
     {
         _reportProposedProcessor = reportProposedProcessor;
         _reportConfirmedProcessor = reportConfirmedProcessor;
