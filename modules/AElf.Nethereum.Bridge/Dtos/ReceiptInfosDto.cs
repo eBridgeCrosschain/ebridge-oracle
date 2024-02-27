@@ -5,6 +5,11 @@ namespace AElf.Nethereum.Bridge.Dtos;
 public class ReceiptInfosDto
 {
     public List<ReceiptDto> Receipts { get; set; }
+
+    public ReceiptInfosDto()
+    {
+        Receipts = new List<ReceiptDto>();
+    }
 }
 
 public class ReceiptDto
