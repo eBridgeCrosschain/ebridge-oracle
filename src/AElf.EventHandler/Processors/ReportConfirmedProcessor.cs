@@ -34,7 +34,7 @@ public class ReportConfirmedProcessor : IReportConfirmedProcessor, ITransientDep
     public ReportConfirmedProcessor(ILogger<ReportConfirmedProcessor> logger,
         ISignatureRecoverableInfoProvider signaturesRecoverableInfoProvider,
         IOptionsSnapshot<BridgeOptions> bridgeOptions, IReportService reportService,
-        IBridgeService bridgeService, IChainProvider chainProvider, 
+        IBridgeService bridgeService, IChainProvider chainProvider,
         IBackgroundJobManager backgroundJobManager,
         IOptionsSnapshot<RetryTransmitInfoOptions> retryTransmitInfoOptions)
     {
@@ -50,14 +50,18 @@ public class ReportConfirmedProcessor : IReportConfirmedProcessor, ITransientDep
 
     public async Task ProcessAsync(string aelfChainId, ReportInfoDto reportQueryInfo)
     {
+        _logger.LogInformation("Process confirm event,is transmitter:{isTransmitter},is all node confirm:{isConfirmed}",
+            _bridgeOptions.IsTransmitter, reportQueryInfo.IsAllNodeConfirmed);
         var chainId = _chainProvider.GetChainId(aelfChainId);
         var targetChainId = reportQueryInfo.TargetChainId;
         var ethereumContractAddress = reportQueryInfo.Token;
         var roundId = reportQueryInfo.RoundId;
 
         //TODO:check permission
-        await _signaturesRecoverableInfoProvider.SetSignatureAsync(chainId, targetChainId,ethereumContractAddress, roundId,
+        await _signaturesRecoverableInfoProvider.SetSignatureAsync(chainId, targetChainId, ethereumContractAddress,
+            roundId,
             reportQueryInfo.Signature);
+        _logger.LogInformation("Process confirm event, reportQueryInfo:{reportQueryInfo}", reportQueryInfo.RoundId);
         if (!reportQueryInfo.IsAllNodeConfirmed) return;
         if (!_bridgeOptions.IsTransmitter) return;
         var report = await _reportService.GetRawReportAsync(chainId, new GetRawReportInput
@@ -68,12 +72,14 @@ public class ReportConfirmedProcessor : IReportConfirmedProcessor, ITransientDep
         });
         _logger.LogInformation("Confirm raw report:{Report}", report.Value);
         var signatureRecoverableInfos =
-            await _signaturesRecoverableInfoProvider.GetSignatureAsync(chainId,targetChainId,
+            await _signaturesRecoverableInfoProvider.GetSignatureAsync(chainId, targetChainId,
                 ethereumContractAddress, roundId);
         foreach (var signature in signatureRecoverableInfos)
         {
-            _logger.LogInformation("Log signature:RoundId:{RoundId},Signature: {Signature}", reportQueryInfo.RoundId,signature);
+            _logger.LogInformation("Log signature:RoundId:{RoundId},Signature: {Signature}", reportQueryInfo.RoundId,
+                signature);
         }
+
         if (signatureRecoverableInfos.Any(o => o.IsNullOrWhiteSpace()))
         {
             _logger.LogError("Wrong signature recoverable info: {}", reportQueryInfo.RoundId);
@@ -102,7 +108,7 @@ public class ReportConfirmedProcessor : IReportConfirmedProcessor, ITransientDep
         _logger.LogInformation(
             "Try to transmit data, TargetChainId: {ChainId} Address: {Address}  RoundId: {RoundId}",
             reportQueryInfo.TargetChainId, ethereumContractAddress, reportQueryInfo.RoundId);
-        
+
         await _backgroundJobManager.EnqueueAsync(new TransmitArgs
         {
             ChainId = chainId,
@@ -117,9 +123,9 @@ public class ReportConfirmedProcessor : IReportConfirmedProcessor, ITransientDep
             BlockHeight = reportQueryInfo.BlockHeight,
             SwapId = ethereumSwapId,
             RoundId = reportQueryInfo.RoundId
-        },delay:TimeSpan.FromSeconds(_retryTransmitInfoOptions.DelayTransmitTimePeriod));
+        }, delay: TimeSpan.FromSeconds(_retryTransmitInfoOptions.DelayTransmitTimePeriod));
 
-        await _signaturesRecoverableInfoProvider.RemoveSignatureAsync(chainId,targetChainId,
+        await _signaturesRecoverableInfoProvider.RemoveSignatureAsync(chainId, targetChainId,
             ethereumContractAddress, roundId);
     }
 
@@ -139,7 +145,7 @@ public class ReportConfirmedProcessor : IReportConfirmedProcessor, ITransientDep
             v[index] = recoverableInfoBytes.Last();
             index++;
         }
-        
+
         return (ByteStringHelper.FromHexString(swapId).ToByteArray(),
             ByteStringHelper.FromHexString(report).ToByteArray(), r, s, v);
     }
