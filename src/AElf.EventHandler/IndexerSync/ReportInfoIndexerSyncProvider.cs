@@ -60,6 +60,7 @@ public class ReportInfoIndexerSyncProvider : IndexerSyncProviderBase
                 await _reportProposedProcessor.ProcessAsync(report.ChainId, report);
                 break;
             case ReportStep.Confirmed:
+                Logger.LogDebug("Report info dto {report}", report);
                 await _reportConfirmedProcessor.ProcessAsync(report.ChainId, report);
                 break;
         }
