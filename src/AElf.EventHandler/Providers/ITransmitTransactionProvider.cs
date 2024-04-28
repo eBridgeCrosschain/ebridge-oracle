@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using AElf.EventHandler.BackgroundJob;
 using AElf.EventHandler.Dto;
 using Microsoft.Extensions.Caching.StackExchangeRedis;
 using Microsoft.Extensions.Logging;
@@ -16,8 +17,9 @@ namespace AElf.EventHandler;
 
 public interface ITransmitTransactionProvider
 {
-    Task PushFailedTransmitAsync<T>(T data);
+    Task PushFailedTransmitAsync<T>(T data, string queue);
     Task ReSendFailedJobAsync();
+    Task ReSendExceedDailyJobAsync();
 }
 
 public class TransmitTransactionProvider : AbpRedisCache, ITransmitTransactionProvider, ISingletonDependency
@@ -28,7 +30,6 @@ public class TransmitTransactionProvider : AbpRedisCache, ITransmitTransactionPr
 
     public ILogger<TransmitTransactionProvider> Logger { get; set; }
 
-    private const string TransmitFailedList = "TransmitFailedList";
 
     public TransmitTransactionProvider(IOptions<RedisCacheOptions> optionsAccessor,
         IDistributedCacheSerializer serializer,
@@ -39,10 +40,10 @@ public class TransmitTransactionProvider : AbpRedisCache, ITransmitTransactionPr
         _backgroundJobManager = backgroundJobManager;
     }
 
-    public async Task PushFailedTransmitAsync<T>(T data)
+    public async Task PushFailedTransmitAsync<T>(T data, string queue)
     {
         await ConnectAsync();
-        await RedisDatabase.ListRightPushAsync(TransmitFailedList,
+        await RedisDatabase.ListRightPushAsync(queue,
             _serializer.Serialize(data));
     }
 
@@ -51,11 +52,24 @@ public class TransmitTransactionProvider : AbpRedisCache, ITransmitTransactionPr
         Logger.LogInformation(
             $"Start to resend failed transmit.");
         await ConnectAsync();
-        var list = await RedisDatabase.ListRangeAsync(TransmitFailedList);
+        await EnqueueRedis(QueueConstants.TransmitFailedList,BackgroundJobPriority.BelowNormal);
+    }
+
+    public async Task ReSendExceedDailyJobAsync()
+    {
+        Logger.LogInformation(
+            "Start to resend exceed daily limit transmit.");
+        await ConnectAsync();
+        await EnqueueRedis(QueueConstants.ExceedDailyLimitList);
+    }
+
+    private async Task EnqueueRedis(string queueName, BackgroundJobPriority priority = BackgroundJobPriority.Normal)
+    {
+        var list = await RedisDatabase.ListRangeAsync(queueName);
         if (list == null || list.Length == 0)
         {
             Logger.LogInformation(
-                $"No failed transmit to resend.");
+                "No transmit to resend.");
             return;
         }
 
@@ -64,8 +78,8 @@ public class TransmitTransactionProvider : AbpRedisCache, ITransmitTransactionPr
             var toPublish = _serializer.Deserialize<TransmitArgs>(item);
             Logger.LogInformation(
                 "Start to publish.chain id:{Item},swap id:{Id}", toPublish.ChainId, toPublish.SwapHashId);
-            await _backgroundJobManager.EnqueueAsync(toPublish, BackgroundJobPriority.BelowNormal);
-            await RedisDatabase.ListLeftPopAsync((RedisKey) TransmitFailedList);
+            await _backgroundJobManager.EnqueueAsync(toPublish, priority);
+            await RedisDatabase.ListLeftPopAsync((RedisKey)queueName);
         }
     }
 }

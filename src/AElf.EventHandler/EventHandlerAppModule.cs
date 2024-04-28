@@ -24,6 +24,7 @@ using Volo.Abp.Autofac;
 using Volo.Abp.AutoMapper;
 using Volo.Abp.BackgroundJobs.RabbitMQ;
 using Volo.Abp.BackgroundWorkers;
+using Volo.Abp.BackgroundWorkers.Quartz;
 using Volo.Abp.Caching;
 using Volo.Abp.Caching.StackExchangeRedis;
 using Volo.Abp.EventBus.RabbitMq;
@@ -45,7 +46,8 @@ namespace AElf.EventHandler;
     typeof(AbpCachingStackExchangeRedisModule),
     typeof(AbpBackgroundWorkersModule),
     typeof(AbpAutoMapperModule),
-    typeof(AbpBackgroundJobsRabbitMqModule)
+    typeof(AbpBackgroundJobsRabbitMqModule),
+    typeof(AbpBackgroundWorkersQuartzModule) 
 )]
 public class EventHandlerAppModule : AbpModule
 {
