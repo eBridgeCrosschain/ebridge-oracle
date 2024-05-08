@@ -11,8 +11,7 @@ namespace AElf.EventHandler.Workers;
 public class ResendExceedDailyLimitWorker : QuartzBackgroundWorkerBase
 {
     private readonly BridgeOptions _bridgeOptions;
-    private readonly ITransmitTransactionProvider _transmitTransactionProvider; 
-    public ILogger<ResendExceedDailyLimitWorker> Logger { get; set; }
+    private readonly ITransmitTransactionProvider _transmitTransactionProvider;
 
 
     public ResendExceedDailyLimitWorker(AbpAsyncTimer timer,
@@ -26,7 +25,6 @@ public class ResendExceedDailyLimitWorker : QuartzBackgroundWorkerBase
         _transmitTransactionProvider = transmitTransactionProvider;
         var resendOption = retryTransmitInfoOptions.Value;
         JobDetail = JobBuilder.Create<ResendExceedDailyLimitWorker>().WithIdentity(nameof(ResendExceedDailyLimitWorker)).Build();
-        Logger.LogInformation("Cron:{c}",resendOption.ResendExceedDailyLimitCron);
         Trigger = TriggerBuilder.Create().WithIdentity(nameof(ResendExceedDailyLimitWorker)).WithCronSchedule(resendOption.ResendExceedDailyLimitCron).Build();
     }
 
