@@ -1,5 +1,6 @@
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Quartz;
 using Volo.Abp.BackgroundWorkers.Quartz;
@@ -11,6 +12,8 @@ public class ResendExceedDailyLimitWorker : QuartzBackgroundWorkerBase
 {
     private readonly BridgeOptions _bridgeOptions;
     private readonly ITransmitTransactionProvider _transmitTransactionProvider; 
+    public ILogger<ResendExceedDailyLimitWorker> Logger { get; set; }
+
 
     public ResendExceedDailyLimitWorker(AbpAsyncTimer timer,
         IServiceScopeFactory serviceScopeFactory,
@@ -23,6 +26,7 @@ public class ResendExceedDailyLimitWorker : QuartzBackgroundWorkerBase
         _transmitTransactionProvider = transmitTransactionProvider;
         var resendOption = retryTransmitInfoOptions.Value;
         JobDetail = JobBuilder.Create<ResendExceedDailyLimitWorker>().WithIdentity(nameof(ResendExceedDailyLimitWorker)).Build();
+        Logger.LogInformation("Cron:{c}",resendOption.ResendExceedDailyLimitCron);
         Trigger = TriggerBuilder.Create().WithIdentity(nameof(ResendExceedDailyLimitWorker)).WithCronSchedule(resendOption.ResendExceedDailyLimitCron).Build();
     }
 
