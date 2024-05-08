@@ -15,13 +15,15 @@ public class ResendExceedDailyLimitWorker : QuartzBackgroundWorkerBase
     public ResendExceedDailyLimitWorker(AbpAsyncTimer timer,
         IServiceScopeFactory serviceScopeFactory,
         IOptionsSnapshot<BridgeOptions> bridgeOptions,
+        IOptionsSnapshot<RetryTransmitInfoOptions> retryTransmitInfoOptions,
         ITransmitTransactionProvider transmitTransactionProvider
     )
     {
         _bridgeOptions = bridgeOptions.Value;
         _transmitTransactionProvider = transmitTransactionProvider;
+        var resendOption = retryTransmitInfoOptions.Value;
         JobDetail = JobBuilder.Create<ResendExceedDailyLimitWorker>().WithIdentity(nameof(ResendExceedDailyLimitWorker)).Build();
-        Trigger = TriggerBuilder.Create().WithIdentity(nameof(ResendExceedDailyLimitWorker)).WithCronSchedule("0 0 0 * * ?").Build();
+        Trigger = TriggerBuilder.Create().WithIdentity(nameof(ResendExceedDailyLimitWorker)).WithCronSchedule(resendOption.ResendExceedDailyLimitCron).Build();
     }
 
     public override async Task Execute(IJobExecutionContext workerContext)

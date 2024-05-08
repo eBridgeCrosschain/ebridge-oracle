@@ -115,11 +115,17 @@ public class TransmitJob :
     {
         if (errorMessage.Contains(TransactionErrorConstants.AlreadyClaimed))
         {
-           return;
+            Logger.LogInformation(
+                "Already claimed.chainId:{Chain},target chain id:{TargetChainId},swapId:{Id},roundId:{RoundId}",
+                args.ChainId, args.TargetChainId, args.SwapId, args.RoundId);
+            return;
         }
 
         if (errorMessage.Contains(TransactionErrorConstants.DailyLimitExceeded))
         {
+            Logger.LogInformation(
+                "DailyLimitExceeded.chainId:{Chain},target chain id:{TargetChainId},swapId:{Id},roundId:{RoundId}",
+                args.ChainId, args.TargetChainId, args.SwapId, args.RoundId);
             PushFailedTransaction(args, QueueConstants.ExceedDailyLimitList);
         }
         else
