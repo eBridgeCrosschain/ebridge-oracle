@@ -103,36 +103,36 @@ public class TransmitJob :
                 catch (Exception e)
                 {
                     Logger.LogError(
-                        "Send Transmit transaction Failed,chainId:{Chain},target chain id:{TargetChainId},swapId:{Id},roundId:{RoundId}. Message: {Message}",
-                        args.ChainId, args.TargetChainId, args.SwapId, args.RoundId, e.Message);
-                    DealWithErrorMessage(e.Message, args);
+                        "Send Transmit transaction Failed,chainId:{Chain},target chain id:{TargetChainId},swapId:{Id},roundId:{RoundId}. Message: {Message},{m},{c}",
+                        args.ChainId, args.TargetChainId, args.SwapId, args.RoundId, e,e.StackTrace,e.InnerException.Message);
+                    DealWithErrorMessage(e, args);
                 }
             }
         }
     }
 
-    private async void DealWithErrorMessage(string errorMessage, TransmitArgs args)
+    private async void DealWithErrorMessage(Exception errorMessage, TransmitArgs args)
     {
-        if (errorMessage.Contains(TransactionErrorConstants.AlreadyClaimed))
-        {
-            Logger.LogInformation(
-                "Already claimed.chainId:{Chain},target chain id:{TargetChainId},swapId:{Id},roundId:{RoundId}",
-                args.ChainId, args.TargetChainId, args.SwapId, args.RoundId);
-            return;
-        }
-
-        if (errorMessage.Contains(TransactionErrorConstants.DailyLimitExceeded))
-        {
-            Logger.LogInformation(
-                "DailyLimitExceeded.chainId:{Chain},target chain id:{TargetChainId},swapId:{Id},roundId:{RoundId}",
-                args.ChainId, args.TargetChainId, args.SwapId, args.RoundId);
-            PushFailedTransaction(args, QueueConstants.ExceedDailyLimitList);
-        }
-        else
-        {
+        // if (errorMessage.Data.Contains(TransactionErrorConstants.AlreadyClaimed))
+        // {
+        //     Logger.LogInformation(
+        //         "Already claimed.chainId:{Chain},target chain id:{TargetChainId},swapId:{Id},roundId:{RoundId}",
+        //         args.ChainId, args.TargetChainId, args.SwapId, args.RoundId);
+        //     return;
+        // }
+        //
+        // if (errorMessage.Contains(TransactionErrorConstants.DailyLimitExceeded))
+        // {
+        //     Logger.LogInformation(
+        //         "DailyLimitExceeded.chainId:{Chain},target chain id:{TargetChainId},swapId:{Id},roundId:{RoundId}",
+        //         args.ChainId, args.TargetChainId, args.SwapId, args.RoundId);
+        //     PushFailedTransaction(args, QueueConstants.ExceedDailyLimitList);
+        // }
+        // else
+        // {
             await _backgroundJobManager.EnqueueAsync(args,
                 delay: TimeSpan.FromMinutes(_retryTransmitInfoOptions.RetryTransmitTimePeriod));
-        }
+        // }
     }
 
     private async void PushFailedTransaction(TransmitArgs eventData, string queue)
