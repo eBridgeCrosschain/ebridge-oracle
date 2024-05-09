@@ -1,17 +1,14 @@
-using System;
 using System.Threading.Tasks;
 using AElf.EventHandler.BackgroundJob;
 using AElf.EventHandler.Dto;
 using Microsoft.Extensions.Caching.StackExchangeRedis;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Nethereum.Hex.HexConvertors.Extensions;
 using StackExchange.Redis;
 using Volo.Abp.BackgroundJobs;
 using Volo.Abp.Caching;
 using Volo.Abp.Caching.StackExchangeRedis;
 using Volo.Abp.DependencyInjection;
-using Volo.Abp.EventBus.Distributed;
 
 namespace AElf.EventHandler;
 
@@ -19,7 +16,7 @@ public interface ITransmitTransactionProvider
 {
     Task PushFailedTransmitAsync<T>(T data, string queue);
     Task ReSendFailedJobAsync();
-    Task ReSendExceedDailyJobAsync();
+    // Task ReSendExceedDailyJobAsync();
 }
 
 public class TransmitTransactionProvider : AbpRedisCache, ITransmitTransactionProvider, ISingletonDependency
@@ -50,18 +47,18 @@ public class TransmitTransactionProvider : AbpRedisCache, ITransmitTransactionPr
     public async Task ReSendFailedJobAsync()
     {
         Logger.LogInformation(
-            $"Start to resend failed transmit.");
+            "Start to resend failed transmit.");
         await ConnectAsync();
         await EnqueueRedis(QueueConstants.TransmitFailedList,BackgroundJobPriority.BelowNormal);
     }
 
-    public async Task ReSendExceedDailyJobAsync()
-    {
-        Logger.LogInformation(
-            "Start to resend exceed daily limit transmit.");
-        await ConnectAsync();
-        await EnqueueRedis(QueueConstants.ExceedDailyLimitList);
-    }
+    // public async Task ReSendExceedDailyJobAsync()
+    // {
+    //     Logger.LogInformation(
+    //         "Start to resend exceed daily limit transmit.");
+    //     await ConnectAsync();
+    //     await EnqueueRedis(QueueConstants.ExceedDailyLimitList);
+    // }
 
     private async Task EnqueueRedis(string queueName, BackgroundJobPriority priority = BackgroundJobPriority.Normal)
     {
@@ -71,7 +68,7 @@ public class TransmitTransactionProvider : AbpRedisCache, ITransmitTransactionPr
             Logger.LogInformation(
                 "No transmit to resend.");
             return;
-        }
+        } 
 
         foreach (var item in list)
         {

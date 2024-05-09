@@ -7,6 +7,7 @@ using AElf.EventHandler.Error;
 using AElf.Nethereum.Bridge;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Serilog;
 using Volo.Abp.BackgroundJobs;
 using Volo.Abp.DependencyInjection;
 using Volo.Abp.ObjectMapping;
@@ -103,8 +104,8 @@ public class TransmitJob :
                 catch (Exception e)
                 {
                     Logger.LogError(
-                        "Send Transmit transaction Failed,chainId:{Chain},target chain id:{TargetChainId},swapId:{Id},roundId:{RoundId}. Message: {Message},{c},{x},{d}",
-                        args.ChainId, args.TargetChainId, args.SwapId, args.RoundId, e,e.InnerException,e.StackTrace,e.ToString());
+                        "Send Transmit transaction Failed,chainId:{Chain},target chain id:{TargetChainId},swapId:{Id},roundId:{RoundId}. Message: {Message}",
+                        args.ChainId, args.TargetChainId, args.SwapId, args.RoundId, e);
                     DealWithErrorMessage(e.ToString(), args);
                 }
             }
@@ -113,26 +114,16 @@ public class TransmitJob :
 
     private async void DealWithErrorMessage(string errorMessage, TransmitArgs args)
     {
-        if (errorMessage.Contains(TransactionErrorConstants.AlreadyClaimed))
+        if (errorMessage.Contains(TransactionErrorConstants.AlreadyClaimed) || errorMessage.Contains(TransactionErrorConstants.AlreadyRecorded))
         {
             Logger.LogInformation(
                 "Already claimed.chainId:{Chain},target chain id:{TargetChainId},swapId:{Id},roundId:{RoundId}",
                 args.ChainId, args.TargetChainId, args.SwapId, args.RoundId);
             return;
         }
-        
-        if (errorMessage.Contains(TransactionErrorConstants.DailyLimitExceeded))
-        {
-            Logger.LogInformation(
-                "DailyLimitExceeded.chainId:{Chain},target chain id:{TargetChainId},swapId:{Id},roundId:{RoundId}",
-                args.ChainId, args.TargetChainId, args.SwapId, args.RoundId);
-            PushFailedTransaction(args, QueueConstants.ExceedDailyLimitList);
-        }
-        else
-        {
-            await _backgroundJobManager.EnqueueAsync(args,
-                delay: TimeSpan.FromMinutes(_retryTransmitInfoOptions.RetryTransmitTimePeriod));
-        }
+
+        await _backgroundJobManager.EnqueueAsync(args,
+            delay: TimeSpan.FromMinutes(_retryTransmitInfoOptions.RetryTransmitTimePeriod));
     }
 
     private async void PushFailedTransaction(TransmitArgs eventData, string queue)
