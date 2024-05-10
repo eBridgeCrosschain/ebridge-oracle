@@ -1,38 +1,33 @@
-﻿using AElf.Nethereum.Core;
-using Nethereum.RPC.Eth.DTOs;
+﻿using AElf.Nethereum.Bridge.Dtos;
 using Volo.Abp.DependencyInjection;
 
 namespace AElf.Nethereum.Bridge;
 
 public interface IBridgeInService
 {
-    Task<GetReceiptInfosDTO> GetSendReceiptInfosAsync(string chainId, string contractAddress, string token, string targetChainId, long fromIndex,long endIndex);
+    Task<ReceiptInfosDto> GetSendReceiptInfosAsync(string chainId, string contractAddress, string token, string targetChainId, long fromIndex,long endIndex);
 
-    Task<GetSendReceiptIndexDTO> GetTransferReceiptIndexAsync(string chainId, string contractAddress, List<string> tokens,
+    Task<SendReceiptIndexDto> GetTransferReceiptIndexAsync(string chainId, string contractAddress, List<string> tokens,
         List<string> targetChainIds);
 }
 
-public class BridgeInService : ContractServiceBase, IBridgeInService, ITransientDependency
+public class BridgeInService : ClientProviderAggregatorBase<IClientBridgeInService>, IBridgeInService, ITransientDependency
 {
-    protected override string SmartContractName { get; } = "BridgeIn";
-
-    public async Task<GetReceiptInfosDTO> GetSendReceiptInfosAsync(string chainId, string contractAddress,
+    public async Task<ReceiptInfosDto> GetSendReceiptInfosAsync(string chainId, string contractAddress,
         string token, string targetChainId, long fromIndex,long endIndex)
     {
-        var function = GetFunction(chainId, contractAddress, "getSendReceiptInfos");
-
-        var evmGetReceiptInfos =
-            await function.CallDeserializingToObjectAsync<GetReceiptInfosDTO>(token, targetChainId, fromIndex,endIndex);
-        return evmGetReceiptInfos;
+        var clientProvider = GetClientProvider(chainId);
+        return await clientProvider.GetSendReceiptInfosAsync(chainId, contractAddress, token, targetChainId, fromIndex,endIndex);
     }
 
-    public async Task<GetSendReceiptIndexDTO> GetTransferReceiptIndexAsync(string chainId, string contractAddress,
+    public async Task<SendReceiptIndexDto> GetTransferReceiptIndexAsync(string chainId, string contractAddress,
         List<string> tokens, List<string> targetChainIds)
     {
-        var function = GetFunction(chainId, contractAddress, "getSendReceiptIndex");
+        var clientProvider = GetClientProvider(chainId);
+        return await clientProvider.GetTransferReceiptIndexAsync(chainId, contractAddress, tokens, targetChainIds);
+    }
 
-        var evmGetReceiptInfos =
-            await function.CallDeserializingToObjectAsync<GetSendReceiptIndexDTO>(tokens, targetChainIds);
-        return evmGetReceiptInfos;
+    public BridgeInService(IEnumerable<IClientBridgeInService> bridgeInServices) : base(bridgeInServices)
+    {
     }
 }
