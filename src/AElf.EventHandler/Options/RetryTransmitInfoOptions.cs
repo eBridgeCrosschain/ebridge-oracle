@@ -8,4 +8,5 @@ public class RetryTransmitInfoOptions
     public int MaxSendTransmitTimes { get; set; }
     public int RetryTransmitCheckTimePeriod {get; set; }
     public int MaxQueryTransmitTimes {get; set; }
+    // public string ResendExceedDailyLimitCron { get; set; } = "0 0 0 * * ?";
 }

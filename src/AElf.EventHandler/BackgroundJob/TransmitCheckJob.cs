@@ -112,6 +112,6 @@ public class TransmitCheckJob :
     private async void PushFailedTransmitAsync(TransmitCheckArgs eventData)
     {
         eventData.Time = DateTime.UtcNow;
-        await _transmitTransactionProvider.PushFailedTransmitAsync(eventData);
+        await _transmitTransactionProvider.PushFailedTransmitAsync(eventData,QueueConstants.TransmitFailedList);
     }
 }

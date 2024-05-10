@@ -3,9 +3,11 @@ using System.Threading.Tasks;
 using AElf.Client.Core;
 using AElf.Client.Core.Options;
 using AElf.EventHandler.Dto;
+using AElf.EventHandler.Error;
 using AElf.Nethereum.Bridge;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Serilog;
 using Volo.Abp.BackgroundJobs;
 using Volo.Abp.DependencyInjection;
 using Volo.Abp.ObjectMapping;
@@ -67,7 +69,7 @@ public class TransmitJob :
         {
             if (args.SendTimes > _retryTransmitInfoOptions.MaxSendTransmitTimes)
             {
-                PushFailedTransaction(args);
+                PushFailedTransaction(args, QueueConstants.TransmitFailedList);
             }
             else
             {
@@ -80,8 +82,10 @@ public class TransmitJob :
                         args.RawVs);
                     if (string.IsNullOrWhiteSpace(sendResult))
                     {
-                        Logger.LogError("Failed to transmit,chainId:{Chain},target chain id:{TargetChainId},swapId:{Id},roundId:{RoundId}", args.ChainId,args.TargetChainId,
-                            args.SwapId,args.RoundId);
+                        Logger.LogError(
+                            "Failed to transmit,chainId:{Chain},target chain id:{TargetChainId},swapId:{Id},roundId:{RoundId}",
+                            args.ChainId, args.TargetChainId,
+                            args.SwapId, args.RoundId);
                         await _backgroundJobManager.EnqueueAsync(args,
                             delay: TimeSpan.FromMinutes(_retryTransmitInfoOptions.RetryTransmitTimePeriod));
                     }
@@ -92,26 +96,41 @@ public class TransmitJob :
                             _objectMapper.Map<TransmitArgs, TransmitCheckArgs>(args),
                             delay: TimeSpan.FromMinutes(_retryTransmitInfoOptions.RetryTransmitTimePeriod));
                         Logger.LogInformation(
-                            "Send transmit check transaction. TxId: {Result},chainId:{Chain},target chain id:{TargetChainId},swapId:{Id},roundId:{RoundId}", sendResult,
-                            args.ChainId,args.TargetChainId,args.SwapId,args.RoundId);
+                            "Send transmit check transaction. TxId: {Result},chainId:{Chain},target chain id:{TargetChainId},swapId:{Id},roundId:{RoundId}",
+                            sendResult,
+                            args.ChainId, args.TargetChainId, args.SwapId, args.RoundId);
                     }
                 }
                 catch (Exception e)
                 {
-                    Logger.LogError("Send Transmit transaction Failed,chainId:{Chain},target chain id:{TargetChainId},swapId:{Id},roundId:{RoundId}. Message: {Message}",
-                        args.ChainId,args.TargetChainId,args.SwapId,args.RoundId, e);
-                    await _backgroundJobManager.EnqueueAsync(args,
-                        delay: TimeSpan.FromMinutes(_retryTransmitInfoOptions.RetryTransmitTimePeriod));
+                    Logger.LogError(
+                        "Send Transmit transaction Failed,chainId:{Chain},target chain id:{TargetChainId},swapId:{Id},roundId:{RoundId}. Message: {Message}",
+                        args.ChainId, args.TargetChainId, args.SwapId, args.RoundId, e);
+                    DealWithErrorMessage(e.ToString(), args);
                 }
             }
         }
     }
 
-    private async void PushFailedTransaction(TransmitArgs eventData)
+    private async void DealWithErrorMessage(string errorMessage, TransmitArgs args)
+    {
+        if (errorMessage.Contains(TransactionErrorConstants.AlreadyClaimed) || errorMessage.Contains(TransactionErrorConstants.AlreadyRecorded))
+        {
+            Logger.LogInformation(
+                "Already claimed.chainId:{Chain},target chain id:{TargetChainId},swapId:{Id},roundId:{RoundId}",
+                args.ChainId, args.TargetChainId, args.SwapId, args.RoundId);
+            return;
+        }
+
+        await _backgroundJobManager.EnqueueAsync(args,
+            delay: TimeSpan.FromMinutes(_retryTransmitInfoOptions.RetryTransmitTimePeriod));
+    }
+
+    private async void PushFailedTransaction(TransmitArgs eventData, string queue)
     {
         //redis
         eventData.SendTimes = 0;
         eventData.Time = DateTime.UtcNow;
-        await _transmitTransactionProvider.PushFailedTransmitAsync(eventData);
+        await _transmitTransactionProvider.PushFailedTransmitAsync(eventData, queue);
     }
 }
