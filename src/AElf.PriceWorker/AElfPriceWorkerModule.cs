@@ -4,6 +4,7 @@ using System.Net.Http;
 using AElf.BlockchainTransactionFee;
 using AElf.Client.Bridge;
 using AElf.Client.Core;
+using AElf.PriceWorker.PriceSync;
 using AElf.TokenPrice;
 using AElf.TokenPrice.CoinGecko;
 using Microsoft.Extensions.DependencyInjection;
@@ -30,6 +31,8 @@ public class AElfPriceWorkerModule : AbpModule
         var configuration = context.Services.GetConfiguration();
         Configure<PriceSyncOptions>(configuration.GetSection("PriceSync"));
         context.Services.AddHostedService<AElfPriceWorkerHostedService>();
+        context.Services.AddTransient<IPriceSyncProvider, GasPriceSyncProvider>();
+        context.Services.AddTransient<IPriceSyncProvider, PriceRatioProvider>();
     }
 
     public override void OnApplicationInitialization(ApplicationInitializationContext context)
