@@ -52,6 +52,7 @@ public class TransmitTransactionProvider : AbpRedisCache, ITransmitTransactionPr
         await EnqueueRedis(QueueConstants.TransmitFailedList,BackgroundJobPriority.BelowNormal);
     }
 
+    //Todo：Continue monitoring error message retrieval for subsequent upgrades.
     // public async Task ReSendExceedDailyJobAsync()
     // {
     //     Logger.LogInformation(
