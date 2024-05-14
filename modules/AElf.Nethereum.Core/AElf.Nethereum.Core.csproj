@@ -13,8 +13,8 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Nethereum.KeyStore" Version="4.7.0" />
-        <PackageReference Include="Nethereum.Web3" Version="4.7.0" />
+        <PackageReference Include="Nethereum.KeyStore" Version="4.20.0" />
+        <PackageReference Include="Nethereum.Web3" Version="4.20.0" />
     </ItemGroup>
 
 </Project>
