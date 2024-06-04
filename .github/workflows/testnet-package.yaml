@@ -2,12 +2,12 @@ name: build and package
 on:
   push:
     branches:
-      - 'release/*'
+      - 'release/2.4.1'
 env:
   DOTNET_INSTALL_DIR: "./.dotnet"
 jobs:
   publish:
-    runs-on: ebridge-oracle-runner
+    runs-on: ebridge-runner
     strategy:
       matrix:
         servicename:
@@ -29,7 +29,7 @@ jobs:
           retention-days: 1
   build-and-push-image:
     needs: publish
-    runs-on: ebridge-oracle-runner
+    runs-on: ebridge-runner
     strategy:
       matrix:
         servicename:
