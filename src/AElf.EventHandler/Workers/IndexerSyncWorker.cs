@@ -29,4 +29,5 @@ public class IndexerSyncWorker : AsyncPeriodicBackgroundWorkerBase
         var tasks = chainIds.SelectMany(chainId => _indexerSyncProviders.Select(provider => provider.ExecuteAsync(chainId)));
         await tasks.WhenAll();
     }
+    
 }
