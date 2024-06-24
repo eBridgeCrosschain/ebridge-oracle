@@ -32,6 +32,7 @@ public class ReportInfoIndexerSyncProvider : IndexerSyncProviderBase
         
         var currentIndexHeight = await GetIndexBlockHeightAsync(chainId);
         var endHeight = GetSyncEndHeight(startHeight, currentIndexHeight);
+        Logger.LogDebug("Handle {Type}, start height: {Height}, end height: {EndHeight}", SyncType, startHeight,endHeight);
 
         while (!IsSyncFinished(startHeight, currentIndexHeight))
         {
@@ -49,6 +50,8 @@ public class ReportInfoIndexerSyncProvider : IndexerSyncProviderBase
 
             startHeight = endHeight + 1;
             endHeight = GetSyncEndHeight(startHeight, currentIndexHeight);
+            Logger.LogDebug("Handle {Type}, next start height: {Height}, end height: {EndHeight}", SyncType, startHeight,endHeight);
+
         }
     }
 
