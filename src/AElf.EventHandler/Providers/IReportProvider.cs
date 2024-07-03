@@ -37,7 +37,8 @@ namespace AElf.EventHandler
         public async Task<bool> ValidateReportAsync(string chainId, string ethereumContractAddress, long roundId,
             OffChainQueryInfoDto queryInfo)
         {
-            var title = queryInfo.Title;
+            _logger.LogInformation("Validate report.{chainId}-{token}-{roundId}", chainId,ethereumContractAddress, roundId);
+                var title = queryInfo.Title;
             var options = queryInfo.Options;
             if (title == null || options == null)
             {

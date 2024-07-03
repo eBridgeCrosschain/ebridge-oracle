@@ -41,6 +41,7 @@ public class ReportProposedProcessor : IReportProposedProcessor,ITransientDepend
 
     public async Task ProcessAsync(string aelfChainId, ReportInfoDto reportQueryInfo)
     {
+        _logger.LogInformation("[ReportProposed] Receive report event.");
         //TODO:Check permission
         var chainId = _chainProvider.GetChainId(aelfChainId);
         var privateKey = _accountProvider.GetPrivateKey(_aelfClientConfigOptions.AccountAlias);
