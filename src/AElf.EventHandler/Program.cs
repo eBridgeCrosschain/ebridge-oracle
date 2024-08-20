@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Serilog;
@@ -48,6 +49,8 @@ public class Program
             .ConfigureAppConfiguration((context, config) =>
             {
                 //setup your additional configuration sources
+                config.AddJsonFile("apollo.appsettings.json");
             })
+            .UseApollo()
             .ConfigureServices((hostContext, services) => { services.AddApplication<EventHandlerAppModule>(); });
 }

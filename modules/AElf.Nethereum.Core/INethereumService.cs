@@ -27,7 +27,6 @@ public class NethereumService : INethereumService, ITransientDependency
         var latestBlockNumber = await web3.Eth.Blocks.GetBlockNumber.SendRequestAsync();
         return latestBlockNumber.ToLong();
     }
-
     public async Task<TransactionReceipt> GetTransactionReceiptAsync(string clientAlias, string transactionHash)
     {
         var web3 = _nethereumClientProvider.GetClient(clientAlias);

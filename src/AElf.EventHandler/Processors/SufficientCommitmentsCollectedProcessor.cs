@@ -43,7 +43,6 @@ public class SufficientCommitmentsCollectedProcessor : ISufficientCommitmentsCol
             _logger.LogError("Failed to reveal data for query {Id}", oracleQueryInfo.QueryId);
             return;
         }
-        
         var revealInput = new RevealInput
         {
             QueryId = queryId,
