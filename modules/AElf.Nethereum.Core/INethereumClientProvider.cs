@@ -1,5 +1,7 @@
 using System.Collections.Concurrent;
 using AElf.Nethereum.Core.Options;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Nethereum.Web3;
 using Volo.Abp.DependencyInjection;
@@ -15,12 +17,14 @@ public class NethereumClientProvider : ConcurrentDictionary<NethereumClientInfo,
 {
     private readonly EthereumClientOptions _ethereumClientOptions;
     private readonly INethereumAccountProvider _nethereumAccountProvider;
+    public ILogger<NethereumClientProvider> Logger { get; set; }
 
     public NethereumClientProvider(IOptionsSnapshot<EthereumClientOptions> ethereumClientOptions,
         INethereumAccountProvider nethereumAccountProvider)
     {
         _nethereumAccountProvider = nethereumAccountProvider;
         _ethereumClientOptions = ethereumClientOptions.Value;
+        Logger = NullLogger<NethereumClientProvider>.Instance;
     }
 
     public Web3 GetClient(string clientAlias, string accountAlias = null)
@@ -28,6 +32,7 @@ public class NethereumClientProvider : ConcurrentDictionary<NethereumClientInfo,
         var clientConfig = _ethereumClientOptions.ClientConfigList
             .FirstOrDefault(o => o.Alias == clientAlias);
         Web3 client;
+        Logger.LogDebug("GetClient: {ClientAlias}, {AccountAlias}", clientConfig.Url, accountAlias);
         if (string.IsNullOrWhiteSpace(accountAlias))
         {
             client = new Web3(clientConfig.Url);
