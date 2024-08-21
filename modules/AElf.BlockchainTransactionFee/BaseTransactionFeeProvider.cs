@@ -25,27 +25,15 @@ public class BaseTransactionFeeProvider : IBlockchainTransactionFeeProvider
     public async Task<TransactionFeeDto> GetTransactionFee()
     {
         Logger.LogDebug("Get base chain transaction fee.");
-        var result = await _apiClient.GetAsync<BaseApiResult<BaseGasTracker>>(
+        var result = await _apiClient.GetAsync<BaseGasTracker>(
             $"https://eth.blockscout.com/api/v2/stats?apikey={_chainExplorerApiOptions.ApiKeys[BlockChain]}");
-        Logger.LogDebug("status:{s}",result.Message);
-        if (result.Message != "OK")
-        {
-            throw new HttpRequestException($"Base api failed: {result.Message}");
-        }
-        Logger.LogDebug("Base gas:{s}",result.Result.GasPrices.Average);
+        Logger.LogDebug("Base gas:{s}",result.GasPrices.Average);
         return new TransactionFeeDto
         {
             Symbol = "ETH",
-            Fee = decimal.Parse(result.Result.GasPrices.Average)
+            Fee = decimal.Parse(result.GasPrices.Average)
         };
     }
-}
-
-public class BaseApiResult<T>
-{
-    public string Message { get; set; }
-
-    public T Result { get; set; }
 }
 
 public class BaseGasTracker
