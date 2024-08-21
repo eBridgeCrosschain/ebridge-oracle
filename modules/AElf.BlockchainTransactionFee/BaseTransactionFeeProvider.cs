@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
+using Newtonsoft.Json;
 
 namespace AElf.BlockchainTransactionFee;
 
@@ -38,13 +39,16 @@ public class BaseTransactionFeeProvider : IBlockchainTransactionFeeProvider
 
 public class BaseGasTracker
 {
+    [JsonProperty("gas_prices")]
     public GasPrices GasPrices { get; set; }
 }
 
 public class GasPrices
 {
+    [JsonProperty("slow")]
     public string Slow { get; set; }
+    [JsonProperty("average")]
     public string Average { get; set; }
+    [JsonProperty("fast")]
     public string Fast { get; set; }
-    
 }
