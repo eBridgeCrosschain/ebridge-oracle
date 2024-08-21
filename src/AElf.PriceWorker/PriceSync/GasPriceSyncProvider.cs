@@ -31,6 +31,7 @@ public class GasPriceSyncProvider : IPriceSyncProvider
 
     public async Task ExecuteAsync()
     {
+        _logger.LogDebug("Start to set gas price.");
         var setGasPriceInput = new SetGasPriceInput();
         foreach (var item in _priceSyncOptions.SourceChains)
         {
