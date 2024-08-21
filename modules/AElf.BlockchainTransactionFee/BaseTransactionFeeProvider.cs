@@ -27,7 +27,7 @@ public class BaseTransactionFeeProvider : IBlockchainTransactionFeeProvider
     {
         Logger.LogDebug("Get base chain transaction fee.");
         var result = await _apiClient.GetAsync<BaseGasTracker>(
-            $"https://eth.blockscout.com/api/v2/stats?apikey={_chainExplorerApiOptions.ApiKeys[BlockChain]}");
+            $"https://base.blockscout.com/api/v2/stats?apikey={_chainExplorerApiOptions.ApiKeys[BlockChain]}");
         Logger.LogDebug("Base gas:{s}",result.GasPrices.Average);
         return new TransactionFeeDto
         {
