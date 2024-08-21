@@ -27,7 +27,6 @@ internal class QueryCreatedProcessor : IQueryCreatedProcessor,ITransientDependen
     private readonly IChainProvider _chainProvider;
 
     private readonly ILogger<QueryCreatedProcessor> _logger;
-
     
     public QueryCreatedProcessor(
         ISaltProvider saltProvider, 
