@@ -14,6 +14,7 @@ namespace AElf.BlockchainTransactionFee
             context.Services.AddTransient<ApiClient>();
             context.Services.AddTransient<IBlockchainTransactionFeeProvider, EthereumTransactionFeeProvider>();
             context.Services.AddTransient<IBlockchainTransactionFeeProvider, BSCTransactionFeeProvider>();
+            context.Services.AddTransient<IBlockchainTransactionFeeProvider, BaseTransactionFeeProvider>();
         }
     }
 }
