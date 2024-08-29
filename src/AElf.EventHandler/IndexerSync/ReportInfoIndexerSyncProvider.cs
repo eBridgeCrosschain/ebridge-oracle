@@ -87,7 +87,11 @@ public class ReportInfoIndexerSyncProvider : IndexerSyncProviderBase
                     step,
                     rawReport,
                     signature,
-                    isAllNodeConfirmed                    
+                    isAllNodeConfirmed,
+                    queryInfo{
+                        title,
+                        options
+                    }                    
             }
         }",
             Variables = new
