@@ -31,7 +31,9 @@ public class ReportInfoIndexerSyncProvider : IndexerSyncProviderBase
         var startHeight = processedHeight + 1;
         
         var currentIndexHeight = await GetIndexBlockHeightAsync(chainId);
+        Logger.LogDebug("Handle {Type}, currentIndexHeight: {Height}", SyncType, currentIndexHeight);
         var endHeight = GetSyncEndHeight(startHeight, currentIndexHeight);
+        Logger.LogDebug("Handle {Type}, start height: {Height}, end height: {EndHeight}", SyncType, startHeight,endHeight);
 
         while (!IsSyncFinished(startHeight, currentIndexHeight))
         {
@@ -49,6 +51,8 @@ public class ReportInfoIndexerSyncProvider : IndexerSyncProviderBase
 
             startHeight = endHeight + 1;
             endHeight = GetSyncEndHeight(startHeight, currentIndexHeight);
+            Logger.LogDebug("Handle {Type}, next start height: {Height}, end height: {EndHeight}", SyncType, startHeight,endHeight);
+
         }
     }
 
@@ -110,10 +114,17 @@ public class ReportInfoDto : GraphQLDto
     public string RawReport { get; set; }
     public string Signature { get; set; }
     public bool IsAllNodeConfirmed { get; set; }
+    public OffChainQueryInfoDto QueryInfo { get; set; }
 }
 
 public enum ReportStep
 {
     Proposed = 0,
     Confirmed = 1
+}
+
+public class OffChainQueryInfoDto
+{
+    public string Title { get; set; }
+    public List<string> Options { get; set; }
 }
