@@ -39,6 +39,7 @@ public class ReportProposedProcessor : IReportProposedProcessor,ITransientDepend
         _aelfClientConfigOptions = aelfConfigOptions.Value;
     }
 
+    
     public async Task ProcessAsync(string aelfChainId, ReportInfoDto reportQueryInfo)
     {
         //TODO:Check permission
