@@ -28,7 +28,6 @@ public class GasPriceSyncProvider : IPriceSyncProvider
         _blockchainTransactionFeeService = blockchainTransactionFeeService;
         _logger = logger;
     }
-
     public async Task ExecuteAsync()
     {
         _logger.LogDebug("Start to set gas price.");
