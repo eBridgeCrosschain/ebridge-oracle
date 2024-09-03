@@ -56,12 +56,6 @@ namespace AElf.PriceWorker
                     services.AddApplication<AElfPriceWorkerModule>();
                     services.AddHttpClient();
                 })
-                .ConfigureAppConfiguration((context, config) =>
-                {
-                    //setup your additional configuration sources
-                    config.AddJsonFile("apollo.appsettings.json");
-                })
-                .UseApollo()
                 .UseAutofac()
                 .UseSerilog();
     }

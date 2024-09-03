@@ -127,7 +127,6 @@ public class EventHandlerAppModule : AbpModule
         }
     }
     
-    
     private void ConfigureGraphQl(ServiceConfigurationContext context,
         IConfiguration configuration)
     {
