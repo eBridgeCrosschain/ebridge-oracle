@@ -22,7 +22,6 @@ public class IndexerSyncWorker : AsyncPeriodicBackgroundWorkerBase
         _indexerSyncProviders = indexerSyncProviders.ToList();
         Timer.Period = 1000 * 5;
     }
-
     protected override async Task DoWorkAsync(PeriodicBackgroundWorkerContext workerContext)
     {
         var chainIds = _chainProvider.GetAllChainIds().Keys;
