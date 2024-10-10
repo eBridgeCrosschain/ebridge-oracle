@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using AElf.EventHandler.HttpClientHelper;
+using AElf.EventHandler.Options;
 using GraphQL;
 using GraphQL.Client.Abstractions;
 using Microsoft.Extensions.Logging;
@@ -16,8 +18,9 @@ public class ReportInfoIndexerSyncProvider : IndexerSyncProviderBase
 
     public ReportInfoIndexerSyncProvider(IGraphQLClient graphQlClient, IDistributedCache<string> distributedCache,
         IReportProposedProcessor reportProposedProcessor, IReportConfirmedProcessor reportConfirmedProcessor,
-        IOptionsSnapshot<IndexerSyncOptions> indexerSyncOptions) : base(
-        graphQlClient, distributedCache, indexerSyncOptions)
+        IOptionsSnapshot<IndexerSyncOptions> indexerSyncOptions,ApiClient apiClient,IOptionsSnapshot<SyncStateServiceOption> syncStateServiceOption)
+        : base(
+            graphQlClient, distributedCache, indexerSyncOptions,apiClient,syncStateServiceOption)
     {
         _reportProposedProcessor = reportProposedProcessor;
         _reportConfirmedProcessor = reportConfirmedProcessor;
@@ -74,8 +77,8 @@ public class ReportInfoIndexerSyncProvider : IndexerSyncProviderBase
         return new GraphQLRequest
         {
             Query =
-                @"query($chainId:String,$startBlockHeight:Long!,$endBlockHeight:Long!){
-            reportInfo(dto: {chainId:$chainId,startBlockHeight:$startBlockHeight,endBlockHeight:$endBlockHeight}){
+                @"query($chainId:String,$startBlockHeight:Long!,$endBlockHeight:Long!,$maxMaxResultCount:Int!){
+            reportInfo(input: {chainId:$chainId,startBlockHeight:$startBlockHeight,endBlockHeight:$endBlockHeight,maxMaxResultCount:$maxMaxResultCount}){
                     id,
                     chainId,
                     blockHash,
@@ -98,7 +101,8 @@ public class ReportInfoIndexerSyncProvider : IndexerSyncProviderBase
             {
                 chainId = chainId,
                 startBlockHeight = startHeight,
-                endBlockHeight = endHeight
+                endBlockHeight = endHeight,
+                maxMaxResultCount = MaxRequestCount
             }
         };
     }

@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using AElf.EventHandler.HttpClientHelper;
+using AElf.EventHandler.Options;
 using GraphQL;
 using GraphQL.Client.Abstractions;
 using Microsoft.Extensions.Logging;
@@ -17,9 +19,9 @@ public class OracleQueryInfoIndexerSyncProvider : IndexerSyncProviderBase
     public OracleQueryInfoIndexerSyncProvider(IGraphQLClient graphQlClient, IDistributedCache<string> distributedCache,
         IQueryCreatedProcessor queryCreatedProcessor,
         ISufficientCommitmentsCollectedProcessor sufficientCommitmentsCollectedProcessor,
-        IOptionsSnapshot<IndexerSyncOptions> indexerSyncOptions)
-        : base(
-            graphQlClient, distributedCache, indexerSyncOptions)
+        IOptionsSnapshot<IndexerSyncOptions> indexerSyncOptions,ApiClient apiClient, IOptionsSnapshot<SyncStateServiceOption> syncStateServiceOption)
+    : base(
+        graphQlClient, distributedCache, indexerSyncOptions,apiClient,syncStateServiceOption)
     {
         _queryCreatedProcessor = queryCreatedProcessor;
         _sufficientCommitmentsCollectedProcessor = sufficientCommitmentsCollectedProcessor;
@@ -72,8 +74,8 @@ public class OracleQueryInfoIndexerSyncProvider : IndexerSyncProviderBase
         return new GraphQLRequest
         {
             Query =
-                @"query($chainId:String,$startBlockHeight:Long!,$endBlockHeight:Long!){
-            oracleQueryInfo(dto: {chainId:$chainId,startBlockHeight:$startBlockHeight,endBlockHeight:$endBlockHeight}){
+                @"query($chainId:String,$startBlockHeight:Long!,$endBlockHeight:Long!,$maxMaxResultCount:Int!){
+            oracleQueryInfo(input: {chainId:$chainId,startBlockHeight:$startBlockHeight,endBlockHeight:$endBlockHeight,maxMaxResultCount:$maxMaxResultCount}){
                     id,
                     chainId,
                     blockHash,
@@ -92,7 +94,8 @@ public class OracleQueryInfoIndexerSyncProvider : IndexerSyncProviderBase
             {
                 chainId = chainId,
                 startBlockHeight = startHeight,
-                endBlockHeight = endHeight
+                endBlockHeight = endHeight,
+                maxMaxResultCount = MaxRequestCount
             }
         };
     }
