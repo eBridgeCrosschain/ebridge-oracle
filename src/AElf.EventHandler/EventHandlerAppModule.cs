@@ -9,6 +9,8 @@ using AElf.Client.MerkleTree;
 using AElf.Client.Oracle;
 using AElf.Client.Report;
 using AElf.EventHandler.Dto;
+using AElf.EventHandler.HttpClientHelper;
+using AElf.EventHandler.Options;
 using AElf.EventHandler.Workers;
 using AElf.Nethereum.Bridge;
 using AElf.Nethereum.Core;
@@ -87,7 +89,7 @@ public class EventHandlerAppModule : AbpModule
             options.Connections.Default.VirtualHost = "/";
             options.Connections.Default.Uri = new Uri(messageQueueConfig.GetSection("Uri").Value);
         });
-        
+
         Configure<AbpRabbitMqBackgroundJobOptions>(configuration.GetSection("AbpRabbitMqBackgroundJob"));
         Configure<OracleOptions>(configuration.GetSection("Oracle"));
         Configure<BridgeOptions>(configuration.GetSection("Bridge"));
@@ -97,11 +99,13 @@ public class EventHandlerAppModule : AbpModule
         Configure<RetryTransmitInfoOptions>(configuration.GetSection("RetryTransmitInfo"));
         Configure<IndexerSyncOptions>(configuration.GetSection("IndexerSync"));
         Configure<ExpiredTimeOptions>(configuration.GetSection("ExpiredTime"));
+        Configure<SyncStateServiceOption>(configuration.GetSection("SyncStateService"));
 
         context.Services.AddHostedService<EventHandlerAppHostedService>();
         context.Services.AddSingleton<ITransmitTransactionProvider, TransmitTransactionProvider>();
         context.Services.AddSingleton<ISignatureRecoverableInfoProvider, SignatureRecoverableInfoProvider>();
         context.Services.AddSingleton<ILatestQueriedReceiptCountProvider, LatestQueriedReceiptCountProvider>();
+        context.Services.AddTransient<ApiClient>();
 
         ConfigureGraphQl(context, configuration);
         
