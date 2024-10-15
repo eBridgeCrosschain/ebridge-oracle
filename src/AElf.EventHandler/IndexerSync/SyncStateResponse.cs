@@ -13,6 +13,7 @@ public class SyncStateItems
     public List<BlockChainStatus> Items { get; set; }
 }
 
+
 public class BlockChainStatus
 {
     public string ChainId { get; set; }
