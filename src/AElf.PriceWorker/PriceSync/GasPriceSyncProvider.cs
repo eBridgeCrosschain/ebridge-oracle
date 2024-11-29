@@ -35,6 +35,10 @@ public class GasPriceSyncProvider : IPriceSyncProvider
         var setGasPriceInput = new SetGasPriceInput();
         foreach (var item in _priceSyncOptions.SourceChains)
         {
+            if (item.ChainType == "TON")
+            {
+                return;
+            }
             _logger.LogDebug("Start to set gas price，chain type:{type}.", item.ChainType);
             var gasFee = await _blockchainTransactionFeeService.GetTransactionFeeAsync(item.ChainType);
             var feeWei = (long)(gasFee.Fee * (decimal)Math.Pow(10, 9));
