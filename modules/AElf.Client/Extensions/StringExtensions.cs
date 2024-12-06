@@ -1,3 +1,5 @@
+using AElf.Client.Helper;
+
 namespace AElf.Client.Extensions;
 
 public static class StringExtensions
@@ -6,7 +8,7 @@ public static class StringExtensions
     {
         if (address == null)
         {
-            return Address.FromPublicKey(ByteArrayHelper.HexStringToByteArray(AElfClientConstants.DefaultPrivateKey));
+            return Address.FromPublicKey(ByteArrayHelper.HexStringToByteArray(KeyPairHelper.CreateKeyPair()));
         }
 
         return Address.FromBase58(address);

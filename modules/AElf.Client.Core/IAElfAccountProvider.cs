@@ -1,5 +1,6 @@
 using AElf.Client.Core.Infrastructure;
 using AElf.Client.Core.Options;
+using AElf.Client.Helper;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
@@ -35,7 +36,7 @@ public class AElfAccountProvider : Dictionary<AElfAccountInfo, byte[]>, IAElfAcc
         _keyDirectoryProvider = keyDirectoryProvider;
         _aelfAccountOptions = aelfAccountOptions.Value;
         _aelfMinerAccountPassword = aelfMinerAccountOptions.Value.DefaultPassword;
-        var defaultPrivateKey = ByteArrayHelper.HexStringToByteArray(AElfClientConstants.DefaultPrivateKey);
+        var defaultPrivateKey = ByteArrayHelper.HexStringToByteArray(KeyPairHelper.CreateKeyPair());
         SetPrivateKey(defaultPrivateKey, "Default", Address.FromPublicKey(defaultPrivateKey).ToBase58()); 
         _keyStoreService = new KeyStoreService();
 

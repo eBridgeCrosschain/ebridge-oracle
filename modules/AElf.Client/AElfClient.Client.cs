@@ -1,5 +1,6 @@
 using AElf.Client.Dto;
 using AElf.Client.Extensions;
+using AElf.Client.Helper;
 using AElf.Client.Model;
 using AElf.Client.Services;
 using AElf.Cryptography;
@@ -46,10 +47,10 @@ public partial class AElfClient : IClientService
     /// <returns>Address</returns>
     public async Task<Address> GetContractAddressByNameAsync(Hash contractNameHash)
     {
-        var from = GetAddressFromPrivateKey(AElfClientConstants.DefaultPrivateKey);
+        var from = GetAddressFromPrivateKey(KeyPairHelper.CreateKeyPair());
         var to = await GetGenesisContractAddressAsync();
         var transaction = await GenerateTransactionAsync(from, to, "GetContractAddressByName", contractNameHash);
-        var txWithSig = SignTransaction(AElfClientConstants.DefaultPrivateKey, transaction);
+        var txWithSig = SignTransaction(KeyPairHelper.CreateKeyPair(), transaction);
 
         var response = await ExecuteTransactionAsync(new ExecuteTransactionDto
         {
@@ -104,13 +105,13 @@ public partial class AElfClient : IClientService
     {
         var tokenContractAddress =
             await GetContractAddressByNameAsync(HashHelper.ComputeFrom("AElf.ContractNames.Token"));
-        var fromAddress = GetAddressFromPrivateKey(AElfClientConstants.DefaultPrivateKey);
+        var fromAddress = GetAddressFromPrivateKey(KeyPairHelper.CreateKeyPair());
         var toAddress = tokenContractAddress.ToBase58();
         var methodName = "GetPrimaryTokenSymbol";
         var param = new Empty();
 
         var transaction = await GenerateTransactionAsync(fromAddress, toAddress, methodName, param);
-        var txWithSign = SignTransaction(AElfClientConstants.DefaultPrivateKey, transaction);
+        var txWithSign = SignTransaction(KeyPairHelper.CreateKeyPair(), transaction);
 
         var result = await ExecuteTransactionAsync(new ExecuteTransactionDto
         {
@@ -133,7 +134,7 @@ public partial class AElfClient : IClientService
     {
         var transactionData = transaction.GetHash().ToByteArray();
 
-        privateKeyHex ??= AElfClientConstants.DefaultPrivateKey;
+        privateKeyHex ??= KeyPairHelper.CreateKeyPair();
 
         // Sign the hash
         var privateKey = ByteArrayHelper.HexStringToByteArray(privateKeyHex);
@@ -153,7 +154,7 @@ public partial class AElfClient : IClientService
     {
         var transactionData = transaction.GetHash().ToByteArray();
 
-        privateKey ??= ByteArrayHelper.HexStringToByteArray(AElfClientConstants.DefaultPrivateKey);
+        privateKey ??= ByteArrayHelper.HexStringToByteArray(KeyPairHelper.CreateKeyPair());
 
         // Sign the hash
         var signature = CryptoHelper.SignWithPrivateKey(privateKey, transactionData);
