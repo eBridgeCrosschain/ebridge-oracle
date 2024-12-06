@@ -1,3 +1,4 @@
+using AElf.Client.Helper;
 using AElf.Cryptography;
 using Google.Protobuf;
 using Volo.Abp.Threading;
@@ -16,7 +17,7 @@ public class TransactionBuilder
     public TransactionBuilder(AElfClient aelfClient)
     {
         _aelfClient = aelfClient;
-        PrivateKey = ByteArrayHelper.HexStringToByteArray(AElfClientConstants.DefaultPrivateKey);
+        PrivateKey = ByteArrayHelper.HexStringToByteArray(KeyPairHelper.CreateKeyPair());
     }
 
     public TransactionBuilder UsePrivateKey(byte[] privateKey)
