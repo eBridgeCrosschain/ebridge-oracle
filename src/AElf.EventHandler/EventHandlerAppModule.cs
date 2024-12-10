@@ -73,7 +73,6 @@ public class EventHandlerAppModule : AbpModule
         {
             var messageQueueConfig = configuration.GetSection("MessageQueue");
             var hostName = messageQueueConfig.GetSection("HostName").Value;
-
             options.Connections.Default.HostName = hostName;
             options.Connections.Default.Port = int.Parse(messageQueueConfig.GetSection("Port").Value);
             options.Connections.Default.UserName = messageQueueConfig.GetSection("UserName").Value;
