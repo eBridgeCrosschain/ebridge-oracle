@@ -24,8 +24,7 @@ public class TransmitTransactionProvider : AbpRedisCache, ITransmitTransactionPr
     private readonly IDistributedCacheSerializer _serializer;
     private readonly IBackgroundJobManager _backgroundJobManager;
     public ILogger<TransmitTransactionProvider> Logger { get; set; }
-
-
+    
     public TransmitTransactionProvider(IOptions<RedisCacheOptions> optionsAccessor,
         IDistributedCacheSerializer serializer,
         IBackgroundJobManager backgroundJobManager)
