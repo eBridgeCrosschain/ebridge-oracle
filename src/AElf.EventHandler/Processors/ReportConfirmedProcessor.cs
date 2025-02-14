@@ -139,6 +139,7 @@ public class ReportConfirmedProcessor : IReportConfirmedProcessor, ITransientDep
             v[index] = recoverableInfoBytes.Last();
             index++;
         }
+        
         return (ByteStringHelper.FromHexString(swapId).ToByteArray(),
             ByteStringHelper.FromHexString(report).ToByteArray(), r, s, v);
     }
