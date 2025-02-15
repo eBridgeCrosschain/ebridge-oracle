@@ -15,6 +15,7 @@ using AElf.Nethereum.Core.Options;
 using AElf.Types;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Serilog.Core;
 using Volo.Abp.DependencyInjection;
 
 namespace AElf.EventHandler;
@@ -63,7 +64,7 @@ public class DataProvider : IDataProvider, ISingletonDependency
         if (title.StartsWith("record_receipts") && options.Count == 2)
         {
             var swapId = title.Split('_').Last();
-
+            _logger.LogInformation("swapId {Id}", swapId);
             var bridgeItem = _bridgeOptions.BridgesIn.Single(c => c.SwapId == swapId);
             var recordReceiptHashInput =
                 await GetReceiptHashMap(Hash.LoadFromHex(swapId), bridgeItem, long.Parse(options[0].Split(".").Last()),
