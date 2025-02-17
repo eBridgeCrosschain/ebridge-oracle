@@ -75,7 +75,6 @@ public class DataProvider : IDataProvider, ISingletonDependency
             _dictionary[queryId] = recordReceiptHashInput;
             return recordReceiptHashInput;
         }
-
         return string.Empty;
     }
 
