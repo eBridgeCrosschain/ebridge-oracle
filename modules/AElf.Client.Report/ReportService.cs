@@ -1,9 +1,11 @@
-﻿using AElf.Client.Core;
+﻿using System.Text.Json;
+using AElf.Client.Core;
 using AElf.Client.Core.Options;
 using AElf.Contracts.Report;
 using AElf.Types;
 using Google.Protobuf;
 using Google.Protobuf.WellKnownTypes;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Volo.Abp.DependencyInjection;
 
@@ -44,6 +46,7 @@ public class ReportService : ContractServiceBase, IReportService, ITransientDepe
 
     public async Task<SendTransactionResult> ConfirmReportAsync(string chainId, ConfirmReportInput confirmReportInput)
     {
+        Logger.LogInformation("Confirm report input: {ConfirmReportInput}", JsonSerializer.Serialize(confirmReportInput));
         var tx = await PerformSendTransactionAsync("ConfirmReport", confirmReportInput, chainId);
         return new SendTransactionResult
         {

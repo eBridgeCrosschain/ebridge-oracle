@@ -1,8 +1,8 @@
+using System.Text.Json;
 using AElf.Client.Core.Options;
 using Google.Protobuf;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Volo.Abp.Threading;
 
 namespace AElf.Client.Core;
 
@@ -19,6 +19,8 @@ public abstract class ContractServiceBase
     {
         var contractAddress = GetContractAddress(chainId);
         var clientAlias = AElfChainAliasOptions.Value.Mapping[chainId];
+        Logger.LogInformation("Send transaction to {ContractAddress} with method {MethodName}, input:{input}", contractAddress,
+            methodName, JsonSerializer.Serialize(parameter));
         return await ClientService.SendAsync(contractAddress, methodName, parameter, clientAlias);
     }
 
