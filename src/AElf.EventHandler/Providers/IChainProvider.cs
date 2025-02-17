@@ -16,7 +16,6 @@ public interface IChainProvider
     Task SetLastIrreversibleBlock(string chainId, long blockHeight);
     Task<BlockIndex> GetLastIrreversibleBlock(string chainId);
 }
-
 public class ChainProvider : IChainProvider, ITransientDependency
 {
     private readonly ChainIdMappingOptions _chainIdMappingOptions;
