@@ -187,6 +187,7 @@ public class ReceiptProvider : IReceiptProvider, ITransientDependency
 
         await SendQueryOracleAsync(swapId, chainId, receiptIdHash, nextRoundStartTokenIndex, lastTokenIndexConfirm,
             bridgeItem.QueryToAddress);
+        
     }
 
     private async Task SendQueryOracleAsync(string swapId, string chainId, string receiptIdHash,
