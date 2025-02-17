@@ -19,8 +19,8 @@ public abstract class ContractServiceBase
     {
         var contractAddress = GetContractAddress(chainId);
         var clientAlias = AElfChainAliasOptions.Value.Mapping[chainId];
-        Logger.LogInformation("Send transaction to {ContractAddress} with method {MethodName}, input:{input}", contractAddress,
-            methodName, JsonSerializer.Serialize(parameter));
+        Logger.LogInformation("Send transaction to {ContractAddress} with method {MethodName}", contractAddress,
+            methodName);
         return await ClientService.SendAsync(contractAddress, methodName, parameter, clientAlias);
     }
 
