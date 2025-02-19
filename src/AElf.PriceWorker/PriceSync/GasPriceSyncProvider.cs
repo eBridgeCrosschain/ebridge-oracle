@@ -60,9 +60,10 @@ public class GasPriceSyncProvider : IPriceSyncProvider
             _logger.LogDebug("No gas price fluctuation exceeded.");
             return;
         }
-
+        _logger.LogDebug("Gas price fluctuation exceeded, start to set gas price.");
         foreach (var item in _priceSyncOptions.TargetChains)
         {
+            _logger.LogDebug("Start to set gas price, ChainId: {chainId}", item);
             await _bridgeService.SetGasPriceAsync(item, setGasPriceInput);
             _logger.LogDebug("SetGasPrice success, ChainId: {chainId}", item);
         }
