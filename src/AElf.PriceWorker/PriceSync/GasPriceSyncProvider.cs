@@ -35,12 +35,18 @@ public class GasPriceSyncProvider : IPriceSyncProvider
         var setGasPriceInput = new SetGasPriceInput();
         foreach (var item in _priceSyncOptions.SourceChains)
         {
+            if (item.ChainType == PriceWorkerConsts.TonChainType)
+            {
+                return;
+            }
             _logger.LogDebug("Start to set gas price，chain type:{type}.", item.ChainType);
             var gasFee = await _blockchainTransactionFeeService.GetTransactionFeeAsync(item.ChainType);
+            _logger.LogDebug("Get gas fee success, ChainId: {chainId}, Fee: {fee}", item.ChainId, gasFee.Fee);
             var feeWei = (long)(gasFee.Fee * (decimal)Math.Pow(10, 9));
 
             if (_priceFluctuationProvider.IsGasPriceFluctuationExceeded(item.ChainId, feeWei))
             {
+                _logger.LogDebug("Gas price fluctuation exceeded, ChainId: {chainId}, Fee: {fee}", item.ChainId, feeWei);
                 setGasPriceInput.GasPriceList.Add(new GasPrice()
                 {
                     ChainId = item.ChainId,
@@ -51,11 +57,13 @@ public class GasPriceSyncProvider : IPriceSyncProvider
 
         if (setGasPriceInput.GasPriceList.Count == 0)
         {
+            _logger.LogDebug("No gas price fluctuation exceeded.");
             return;
         }
-
+        _logger.LogDebug("Gas price fluctuation exceeded, start to set gas price.");
         foreach (var item in _priceSyncOptions.TargetChains)
         {
+            _logger.LogDebug("Start to set gas price, ChainId: {chainId}", item);
             await _bridgeService.SetGasPriceAsync(item, setGasPriceInput);
             _logger.LogDebug("SetGasPrice success, ChainId: {chainId}", item);
         }
